@@ -1,0 +1,20 @@
+# Stage 1: Download MySQL Connector/J
+FROM maven:3.8.4-openjdk-17 AS downloader
+
+WORKDIR /downloads
+
+# Download the MySQL Connector/J dependency
+RUN mvn dependency:get -Dartifact=com.mysql:mysql-connector-j:8.0.33 -Ddest=.
+
+# Stage 2: Use the official Liquibase image
+FROM liquibase/liquibase:latest
+
+# Copy the MySQL Connector/J JAR from the downloader stage to the Liquibase lib directory
+COPY --from=downloader /downloads/mysql-connector-j-8.0.33.jar /liquibase/lib/mysql-connector-java.jar
+
+# Copy the changelog files to the image
+COPY liquibase/db.changelog-master.yaml .
+COPY liquibase/001-create-tables.yaml .
+
+# Default command to run Liquibase with the master changelog
+CMD ["liquibase", "--changelog-file=db.changelog-master.yaml", "update"]

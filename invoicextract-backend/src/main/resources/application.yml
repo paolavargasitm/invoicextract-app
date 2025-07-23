@@ -1,31 +1,17 @@
-
 spring:
-  application:
-    name: invoicextract-backend
   datasource:
-    url: jdbc:mysql://localhost:3306/invoices
+    url: jdbc:mysql://localhost:3306/invoices?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+  liquibase:
+    enabled: false
+    change-log: classpath:db/changelog/db.changelog-master.yaml
 
 server:
-  port: 8080
-cloud:
-  aws:
-    credentials:
-      access-key: YOUR_ACCESS_KEY
-      secret-key: YOUR_SECRET_KEY
-    region:
-      static: us-east-1
-    s3:
-      bucket: bucket-name
-
-swagger:
-  title: Invoice Extract API
-  description: API documentation for invoice extraction system
-  version: 1.0
+  servlet:
+    context-path: /invoicextract

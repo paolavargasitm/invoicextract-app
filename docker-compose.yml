@@ -9,18 +9,37 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
   adminer:
     image: adminer
     ports:
       - "8081:8080"
 
+  liquibase:
+    build:
+      context: .
+      dockerfile: Dockerfile.liquibase
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      LIQUIBASE_COMMAND_URL: jdbc:mysql://mysql:3306/invoices?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      LIQUIBASE_COMMAND_USERNAME: root
+      LIQUIBASE_COMMAND_PASSWORD: root
+
   app:
-    build: .
+    build:
+      context: ./invoicextract-backend
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     depends_on:
-      - mysql
+      liquibase:
+        condition: service_completed_successfully
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/invoices
       SPRING_DATASOURCE_USERNAME: root
