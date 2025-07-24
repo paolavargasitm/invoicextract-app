@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 1
-      author: paola
+      author: cascade
       changes:
         - createTable:
             tableName: invoices
@@ -34,25 +34,21 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: created_date
+                  name: created_at
                   type: DATETIME
                   constraints:
                     nullable: false
               - column:
-                  name: modified_date
+                  name: updated_at
                   type: DATETIME
-                  constraints:
-                    nullable: false
               - column:
-                  name: created_by
-                  type: VARCHAR(255)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: modified_by
-                  type: VARCHAR(255)
-                  constraints:
-                    nullable: false
+                  name: file_url
+                  type: VARCHAR(512)
+
+  - changeSet:
+      id: 2
+      author: cascade
+      changes:
         - createTable:
             tableName: invoice_metadata
             columns:
@@ -67,12 +63,12 @@ databaseChangeLog:
                   name: invoice_id
                   type: BIGINT
                   constraints:
-                    foreignKeyName: fk_invoice_metadata_invoice
-                    references: invoices(id)
                     nullable: false
+                    foreignKeyName: fk_invoicemetadata_invoices
+                    references: invoices(id)
               - column:
                   name: invoice_number
-                  type: VARCHAR(255)
+                  type: VARCHAR(100)
               - column:
                   name: customer_name
                   type: VARCHAR(255)
@@ -81,12 +77,18 @@ databaseChangeLog:
                   type: VARCHAR(255)
               - column:
                   name: customer_address
-                  type: VARCHAR(255)
+                  type: TEXT
               - column:
                   name: supplier_name
                   type: VARCHAR(255)
               - column:
-                  name: total
+                  name: supplier_email
+                  type: VARCHAR(255)
+              - column:
+                  name: supplier_address
+                  type: TEXT
+              - column:
+                  name: amount
                   type: DECIMAL(15, 2)
               - column:
                   name: currency
@@ -95,22 +97,23 @@ databaseChangeLog:
                   name: tax_amount
                   type: DECIMAL(15, 2)
               - column:
-                  name: created_date
-                  type: DATETIME
-                  constraints:
-                    nullable: false
+                  name: subtotal
+                  type: DECIMAL(15, 2)
               - column:
-                  name: modified_date
-                  type: DATETIME
-                  constraints:
-                    nullable: false
+                  name: total_amount
+                  type: DECIMAL(15, 2)
               - column:
-                  name: created_by
-                  type: VARCHAR(255)
-                  constraints:
-                    nullable: false
+                  name: issue_date
+                  type: DATE
               - column:
-                  name: modified_by
-                  type: VARCHAR(255)
-                  constraints:
-                    nullable: false
+                  name: due_date
+                  type: DATE
+              - column:
+                  name: payment_terms
+                  type: VARCHAR(100)
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: notes
+                  type: TEXT

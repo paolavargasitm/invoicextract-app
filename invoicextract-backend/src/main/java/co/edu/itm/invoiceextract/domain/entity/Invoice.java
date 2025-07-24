@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "invoices")
 @Schema(description = "Invoice entity representing an invoice document in the system")
-public class Invoice {
+public class Invoice extends AuditableEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

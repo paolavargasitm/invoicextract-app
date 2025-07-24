@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: "create-email-configurations"
+      author: "paola"
+      changes:
+        - createTable:
+            tableName: email_configurations
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: host
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: port
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: protocol
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column: 
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_date
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: modified_date
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: modified_by
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
