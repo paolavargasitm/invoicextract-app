@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "invoice_metadata")
 @Schema(description = "Detailed metadata information for invoices")
-public class InvoiceMetadata {
+public class InvoiceMetadata extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

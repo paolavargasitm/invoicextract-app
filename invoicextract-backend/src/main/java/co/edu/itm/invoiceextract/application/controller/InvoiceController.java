@@ -10,6 +10,9 @@ import co.edu.itm.invoiceextract.domain.entity.InvoiceMetadata;
 import co.edu.itm.invoiceextract.domain.enums.InvoiceStatus;
 import co.edu.itm.invoiceextract.domain.enums.InvoiceType;
 import co.edu.itm.invoiceextract.application.service.InvoiceService;
+import co.edu.itm.invoiceextract.application.usecase.ApproveInvoiceUseCase;
+import co.edu.itm.invoiceextract.application.usecase.RejectInvoiceUseCase;
+import co.edu.itm.invoiceextract.application.usecase.FetchInvoicesUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -37,10 +40,16 @@ import java.util.Map;
 public class InvoiceController {
     private final InvoiceService service;
     private final InvoiceMapper mapper;
+    private final ApproveInvoiceUseCase approveInvoiceUseCase;
+    private final RejectInvoiceUseCase rejectInvoiceUseCase;
+    private final FetchInvoicesUseCase fetchInvoicesUseCase;
 
-    public InvoiceController(InvoiceService service, InvoiceMapper mapper) {
+    public InvoiceController(InvoiceService service, InvoiceMapper mapper, ApproveInvoiceUseCase approveInvoiceUseCase, RejectInvoiceUseCase rejectInvoiceUseCase, FetchInvoicesUseCase fetchInvoicesUseCase) {
         this.service = service;
         this.mapper = mapper;
+        this.approveInvoiceUseCase = approveInvoiceUseCase;
+        this.rejectInvoiceUseCase = rejectInvoiceUseCase;
+        this.fetchInvoicesUseCase = fetchInvoicesUseCase;
     }
 
     @Operation(summary = "Get all invoices", description = "Retrieve a list of all invoices in the system")
@@ -51,7 +60,7 @@ public class InvoiceController {
     @GetMapping
     public ResponseEntity<List<Invoice>> getAllInvoices(
             @Parameter(description = "Include metadata in response") @RequestParam(defaultValue = "false") boolean includeMetadata) {
-        List<Invoice> invoices = includeMetadata ? service.findAllWithMetadata() : service.findAll();
+        List<Invoice> invoices = includeMetadata ? fetchInvoicesUseCase.findAllWithMetadata() : fetchInvoicesUseCase.findAll();
         return ResponseEntity.ok(invoices);
     }
 
@@ -63,7 +72,7 @@ public class InvoiceController {
     @GetMapping("/paginated")
     public ResponseEntity<Page<Invoice>> getAllInvoicesPaginated(
             @Parameter(description = "Pagination parameters") Pageable pageable) {
-        Page<Invoice> invoices = service.findAll(pageable);
+        Page<Invoice> invoices = fetchInvoicesUseCase.findAll(pageable);
         return ResponseEntity.ok(invoices);
     }
 
@@ -79,11 +88,11 @@ public class InvoiceController {
             @PathVariable Long id,
             @Parameter(description = "Include metadata in response") @RequestParam(defaultValue = "true") boolean includeMetadata) {
         if (includeMetadata) {
-            return service.findByIdWithMetadata(id)
+            return fetchInvoicesUseCase.findByIdWithMetadata(id)
                     .map(invoice -> ResponseEntity.ok(invoice))
                     .orElse(ResponseEntity.notFound().build());
         } else {
-            return service.findById(id)
+            return fetchInvoicesUseCase.findById(id)
                     .map(invoice -> ResponseEntity.ok(invoice))
                     .orElse(ResponseEntity.notFound().build());
         }
@@ -98,7 +107,7 @@ public class InvoiceController {
     public ResponseEntity<List<Invoice>> getInvoicesByEmail(
             @Parameter(description = "Email to search for", example = "customer@example.com")
             @PathVariable String email) {
-        List<Invoice> invoices = service.findByEmail(email);
+        List<Invoice> invoices = fetchInvoicesUseCase.findByEmail(email);
         return ResponseEntity.ok(invoices);
     }
 
@@ -111,7 +120,7 @@ public class InvoiceController {
     public ResponseEntity<List<Invoice>> searchInvoicesByEmail(
             @Parameter(description = "Email to search for", example = "customer")
             @RequestParam String email) {
-        List<Invoice> invoices = service.findByEmailContaining(email);
+        List<Invoice> invoices = fetchInvoicesUseCase.findByEmailContaining(email);
         return ResponseEntity.ok(invoices);
     }
 
@@ -124,7 +133,7 @@ public class InvoiceController {
     public ResponseEntity<List<Invoice>> getInvoicesByStatus(
             @Parameter(description = "Status to filter by", example = "PENDING")
             @PathVariable InvoiceStatus status) {
-        List<Invoice> invoices = service.findByStatus(status);
+        List<Invoice> invoices = fetchInvoicesUseCase.findByStatus(status);
         return ResponseEntity.ok(invoices);
     }
 
@@ -137,7 +146,7 @@ public class InvoiceController {
     public ResponseEntity<List<Invoice>> getInvoicesByType(
             @Parameter(description = "Type to filter by", example = "INVOICE")
             @PathVariable InvoiceType type) {
-        List<Invoice> invoices = service.findByType(type);
+        List<Invoice> invoices = fetchInvoicesUseCase.findByType(type);
         return ResponseEntity.ok(invoices);
     }
 
@@ -150,7 +159,7 @@ public class InvoiceController {
     public ResponseEntity<List<Invoice>> getInvoicesByEmailAndStatus(
             @Parameter(description = "Email to filter by") @RequestParam String email,
             @Parameter(description = "Status to filter by") @RequestParam InvoiceStatus status) {
-        List<Invoice> invoices = service.findByEmailAndStatus(email, status);
+        List<Invoice> invoices = fetchInvoicesUseCase.findByEmailAndStatus(email, status);
         return ResponseEntity.ok(invoices);
     }
 
@@ -165,7 +174,7 @@ public class InvoiceController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @Parameter(description = "End date", example = "2024-12-31T23:59:59")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        List<Invoice> invoices = service.findByDateBetween(startDate, endDate);
+        List<Invoice> invoices = fetchInvoicesUseCase.findByDateBetween(startDate, endDate);
         return ResponseEntity.ok(invoices);
     }
 
@@ -212,24 +221,36 @@ public class InvoiceController {
         }
     }
 
-    @Operation(summary = "Update invoice status", description = "Update only the status of an existing invoice")
+    @Operation(summary = "Approve an invoice", description = "Marks an invoice as APPROVED.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Invoice status updated successfully",
+            @ApiResponse(responseCode = "200", description = "Invoice approved successfully",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Invoice.class))),
             @ApiResponse(responseCode = "404", description = "Invoice not found")
     })
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<Invoice> updateInvoiceStatus(
-            @Parameter(description = "ID of the invoice to update", example = "1")
-            @PathVariable Long id,
-            @Parameter(description = "New status for the invoice")
-            @RequestBody Map<String, InvoiceStatus> statusUpdate) {
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<Invoice> approveInvoice(
+            @Parameter(description = "ID of the invoice to approve", example = "1")
+            @PathVariable Long id) {
         try {
-            InvoiceStatus newStatus = statusUpdate.get("status");
-            if (newStatus == null) {
-                return ResponseEntity.badRequest().build();
-            }
-            Invoice updatedInvoice = service.updateStatus(id, newStatus);
+            Invoice updatedInvoice = approveInvoiceUseCase.approve(id);
+            return ResponseEntity.ok(updatedInvoice);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @Operation(summary = "Reject an invoice", description = "Marks an invoice as REJECTED.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Invoice rejected successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Invoice.class))),
+            @ApiResponse(responseCode = "404", description = "Invoice not found")
+    })
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<Invoice> rejectInvoice(
+            @Parameter(description = "ID of the invoice to reject", example = "1")
+            @PathVariable Long id) {
+        try {
+            Invoice updatedInvoice = rejectInvoiceUseCase.reject(id);
             return ResponseEntity.ok(updatedInvoice);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -274,21 +295,21 @@ public class InvoiceController {
     @GetMapping("/dashboard-stats")
     @Operation(summary = "Get dashboard statistics", description = "Provides summary statistics for the dashboard view, including total invoices, success/error counts, and total amount.")
     public ResponseEntity<DashboardStatsDTO> getDashboardStats() {
-        DashboardStatsDTO stats = service.getDashboardStats();
+        DashboardStatsDTO stats = fetchInvoicesUseCase.getDashboardStats();
         return ResponseEntity.ok(stats);
     }
 
     @GetMapping("/recent")
     @Operation(summary = "Get recent invoices", description = "Provides a paginated list of the most recent invoices for the dashboard table.")
     public ResponseEntity<Page<RecentInvoiceDTO>> getRecentInvoices(@PageableDefault(size = 10, sort = "date,desc") Pageable pageable) {
-        Page<RecentInvoiceDTO> recentInvoices = service.getRecentInvoices(pageable);
+        Page<RecentInvoiceDTO> recentInvoices = fetchInvoicesUseCase.getRecentInvoices(pageable);
         return ResponseEntity.ok(recentInvoices);
     }
 
     @GetMapping("/{id}/details")
     @Operation(summary = "Get invoice details", description = "Provides detailed information for a single invoice, including the file URL for download.")
     public ResponseEntity<InvoiceDetailDTO> getInvoiceDetails(@PathVariable Long id) {
-        return service.getInvoiceDetails(id)
+        return fetchInvoicesUseCase.getInvoiceDetails(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -302,7 +323,7 @@ public class InvoiceController {
     public ResponseEntity<Map<String, Boolean>> checkInvoiceExists(
             @Parameter(description = "ID of the invoice to check", example = "1")
             @PathVariable Long id) {
-        boolean exists = service.existsById(id);
+        boolean exists = fetchInvoicesUseCase.existsById(id);
         return ResponseEntity.ok(Map.of("exists", exists));
     }
 
@@ -314,14 +335,14 @@ public class InvoiceController {
     @GetMapping("/statistics")
     public ResponseEntity<Map<String, Object>> getInvoiceStatistics() {
         Map<String, Object> stats = Map.of(
-                "totalCount", service.count(),
-                "pendingCount", service.countByStatus(InvoiceStatus.PENDING),
-                "approvedCount", service.countByStatus(InvoiceStatus.APPROVED),
-                "rejectedCount", service.countByStatus(InvoiceStatus.REJECTED),
-                "paidCount", service.countByStatus(InvoiceStatus.PAID),
-                "invoiceCount", service.countByType(InvoiceType.INVOICE),
-                "creditNoteCount", service.countByType(InvoiceType.CREDIT_NOTE),
-                "debitNoteCount", service.countByType(InvoiceType.DEBIT_NOTE)
+                "totalCount", fetchInvoicesUseCase.count(),
+                "pendingCount", fetchInvoicesUseCase.countByStatus(InvoiceStatus.PENDING),
+                "approvedCount", fetchInvoicesUseCase.countByStatus(InvoiceStatus.APPROVED),
+                "rejectedCount", fetchInvoicesUseCase.countByStatus(InvoiceStatus.REJECTED),
+                "paidCount", fetchInvoicesUseCase.countByStatus(InvoiceStatus.PAID),
+                "invoiceCount", fetchInvoicesUseCase.countByType(InvoiceType.INVOICE),
+                "creditNoteCount", fetchInvoicesUseCase.countByType(InvoiceType.CREDIT_NOTE),
+                "debitNoteCount", fetchInvoicesUseCase.countByType(InvoiceType.DEBIT_NOTE)
         );
         return ResponseEntity.ok(stats);
     }
@@ -337,7 +358,7 @@ public class InvoiceController {
     public ResponseEntity<InvoiceMetadata> getInvoiceMetadata(
             @Parameter(description = "ID of the invoice", example = "1")
             @PathVariable Long id) {
-        return service.findMetadataByInvoiceId(id)
+        return fetchInvoicesUseCase.findMetadataByInvoiceId(id)
                 .map(metadata -> ResponseEntity.ok(metadata))
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -352,7 +373,7 @@ public class InvoiceController {
     public ResponseEntity<InvoiceMetadata> getByInvoiceNumber(
             @Parameter(description = "Invoice number to search for", example = "INV-2024-001")
             @PathVariable String invoiceNumber) {
-        return service.findMetadataByInvoiceNumber(invoiceNumber)
+        return fetchInvoicesUseCase.findMetadataByInvoiceNumber(invoiceNumber)
                 .map(metadata -> ResponseEntity.ok(metadata))
                 .orElse(ResponseEntity.notFound().build());
     }

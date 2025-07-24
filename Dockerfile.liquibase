@@ -12,9 +12,8 @@ FROM liquibase/liquibase:latest
 # Copy the MySQL Connector/J JAR from the downloader stage to the Liquibase lib directory
 COPY --from=downloader /downloads/mysql-connector-j-8.0.33.jar /liquibase/lib/mysql-connector-java.jar
 
-# Copy the changelog files to the image
-COPY liquibase/db.changelog-master.yaml .
-COPY liquibase/001-create-tables.yaml .
+# Copy the entire Liquibase changelog directory
+COPY liquibase/ .
 
 # Default command to run Liquibase with the master changelog
 CMD ["liquibase", "--changelog-file=db.changelog-master.yaml", "update"]

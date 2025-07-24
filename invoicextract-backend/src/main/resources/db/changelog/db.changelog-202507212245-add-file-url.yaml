@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202507212245-1
+      author: cascade
+      changes:
+        - addColumn:
+            tableName: invoices
+            columns:
+              - column:
+                  name: file_url
+                  type: VARCHAR(512)
+                  remarks: "URL to the invoice PDF file stored in Azure Blob Storage"
+                  constraints:
+                    nullable: true
