@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
       file: 001-create-tables.yaml
+  - include:
+      file: 002-create-email-configurations-table.yaml

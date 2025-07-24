@@ -1,487 +1,213 @@
 {
 	"info": {
-		"_postman_id": "a8a5b3c8-e2d1-4e4e-8e2e-8e1e1e1e1e1e",
+		"_postman_id": "a1b2c3d4-e5f6-7890-1234-abcdef123456",
 		"name": "InvoiceExtract API",
+		"description": "Complete API for the InvoiceExtract application, including invoice management and email configuration.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Get all invoices",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get invoices with pagination",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/paginated?page=0&size=10",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"paginated"
-					],
-					"query": [
-						{
-							"key": "page",
-							"value": "0"
-						},
-						{
-							"key": "size",
-							"value": "10"
+			"name": "Invoice Management",
+			"description": "API for managing invoices.",
+			"item": [
+				{
+					"name": "Get All Invoices",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices?includeMetadata=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices"
+							],
+							"query": [
+								{
+									"key": "includeMetadata",
+									"value": "true"
+								}
+							]
 						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get invoice by ID",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/1",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get invoices by email",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/email/customer@example.com",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"email",
-						"customer@example.com"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Search invoices by email (partial match)",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/search/email?email=customer",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"search",
-						"email"
-					],
-					"query": [
-						{
-							"key": "email",
-							"value": "customer"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get invoices by status",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/status/PENDING",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"status",
-						"PENDING"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get invoices by type",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/type/INVOICE",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"type",
-						"INVOICE"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get invoices by email and status",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/filter?email=customer@example.com&status=PENDING",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"filter"
-					],
-					"query": [
-						{
-							"key": "email",
-							"value": "customer@example.com"
-						},
-						{
-							"key": "status",
-							"value": "PENDING"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get invoices by date range",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/date-range?startDate=2024-01-01T00:00:00&endDate=2024-12-31T23:59:59",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"date-range"
-					],
-					"query": [
-						{
-							"key": "startDate",
-							"value": "2024-01-01T00:00:00"
-						},
-						{
-							"key": "endDate",
-							"value": "2024-12-31T23:59:59"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Create a new invoice",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"email\": \"newcustomer@example.com\",\n    \"date\": \"2025-07-21T21:48:30\",\n    \"status\": \"PENDING\",\n    \"type\": \"INVOICE\",\n    \"metadata\": {\n        \"total\": 150.75,\n        \"currency\": \"USD\"\n    }\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Update an existing invoice",
-			"request": {
-				"method": "PUT",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"email\": \"updatedcustomer@example.com\",\n    \"date\": \"2025-07-21T22:00:00\",\n    \"status\": \"PAID\",\n    \"type\": \"INVOICE\",\n    \"metadata\": {\n        \"total\": 200.00,\n        \"currency\": \"USD\",\n        \"payment_method\": \"Credit Card\"\n    }\n}",
-					"options": {
-						"raw": {
-							"language": "json"
+				{
+					"name": "Get Invoice by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"1"
+							]
 						}
-					}
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/1",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Delete an invoice",
-			"request": {
-				"method": "DELETE",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/1",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Update invoice status",
-			"request": {
-				"method": "PATCH",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"status\": \"APPROVED\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/1/status",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"1",
-						"status"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Update invoice type",
-			"request": {
-				"method": "PATCH",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"type\": \"CREDIT_NOTE\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/1/type",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"1",
-						"type"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get dashboard statistics",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/dashboard-stats",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"dashboard-stats"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get recent invoices",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/recent?page=0&size=5",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"recent"
-					],
-					"query": [
-						{
-							"key": "page",
-							"value": "0"
+				{
+					"name": "Create Invoice",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"cude\": \"CUFE-123456789\",\n  \"email\": \"test@example.com\",\n  \"date\": \"2024-08-03T19:45:00\",\n  \"status\": \"PENDING\",\n  \"type\": \"INVOICE\",\n  \"metadata\": {\n    \"totalAmount\": 1500.75,\n    \"currency\": \"USD\",\n    \"paymentMethod\": \"Credit Card\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
-						{
-							"key": "size",
-							"value": "5"
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices"
+							]
 						}
-					]
+					},
+					"response": []
+				},
+				{
+					"name": "Update Invoice Status",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"APPROVED\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/1/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"1",
+								"status"
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
 		},
 		{
-			"name": "Get invoice details",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8080/invoicextract/api/v1/invoices/1/details",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"invoicextract",
-						"api",
-						"v1",
-						"invoices",
-						"1",
-						"details"
-					]
+			"name": "Email Configuration",
+			"description": "API for managing email service credentials.",
+			"item": [
+				{
+					"name": "Create or Update Email Configuration",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"my-email@example.com\",\n  \"password\": \"a-very-secret-password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/config/email",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"config",
+								"email"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Latest Active Email Credentials",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/config/email/my-email@example.com",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"config",
+								"email",
+								"my-email@example.com"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Email Configurations by Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/config/email/filter?username=my-email@example.com&status=ACTIVE",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"config",
+								"email",
+								"filter"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "my-email@example.com"
+								},
+								{
+									"key": "status",
+									"value": "ACTIVE"
+								}
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/invoicextract",
+			"type": "default"
 		}
 	]
 }
