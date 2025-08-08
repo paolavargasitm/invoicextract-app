@@ -1,20 +1,33 @@
-logging:
-  level:
-    org.springframework: DEBUG
-
 spring:
+  logging:
+    level:
+      org.springframework: DEBUG
+
+  # Kafka Configuration
+  kafka:
+    consumer:
+      bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+      group-id: invoice-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      listener:
+        concurrency: 3
   datasource:
     url: jdbc:mysql://mysql:3306/invoices?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: true
+
   liquibase:
     enabled: false
-    change-log: classpath:db.changelog-master.yaml
+    change-log: classpath:db/changelog/db.changelog-master.yaml
 
 server:
   servlet:
@@ -22,4 +35,4 @@ server:
 
 # Custom application properties
 encryption:
-  secret-key: "ThisIsASecretKey1234567890123456" # IMPORTANT: Use a secure, randomly generated key in production and store it outside this file.
+  secret-key: "ThisIsASecretKey1234567890123456" # IMPORTANTE: Usa una clave segura y guárdala fuera de este archivo en producción
