@@ -1,4 +1,4 @@
-package co.edu.itm.invoiceextract.config;
+package co.edu.itm.invoiceextract.application.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
