@@ -102,7 +102,7 @@ public class EmailConfigurationController {
                         credentials.put("username", config.getUsername());
                         credentials.put("password", config.getPassword()); // Return encrypted password
                         credentials.put("status", config.getStatus().toString());
-                        credentials.put("createdAt", config.getCreatedAt().toString());
+                        credentials.put("createdAt", config.getCreatedDate().toString());
                         return credentials;
                     })
                     .collect(Collectors.toList());
