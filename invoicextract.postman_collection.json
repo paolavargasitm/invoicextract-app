@@ -62,7 +62,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"cude\": \"CUFE-123456789\",\n  \"email\": \"test@example.com\",\n  \"date\": \"2024-08-03T19:45:00\",\n  \"status\": \"PENDING\",\n  \"type\": \"INVOICE\",\n  \"metadata\": {\n    \"totalAmount\": 1500.75,\n    \"currency\": \"USD\",\n    \"paymentMethod\": \"Credit Card\"\n  }\n}",
+							"raw": "{\n  \"email\": \"test@example.com\",\n  \"date\": \"2024-08-03T19:45:00\",\n  \"status\": \"PENDING\",\n  \"type\": \"INVOICE\",\n  \"metadata\": {\n    \"customerEmail\": \"test@example.com\",\n    \"supplierName\": \"ACME Corp\",\n    \"issueDate\": \"2024-08-03\",\n    \"totalAmount\": 1500.75,\n    \"currency\": \"USD\"\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -84,21 +84,12 @@
 					"response": []
 				},
 				{
-					"name": "Update Invoice Status",
+					"name": "Approve Invoice",
 					"request": {
-						"method": "PATCH",
+						"method": "POST",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"status\": \"APPROVED\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/invoices/1/status",
+							"raw": "{{baseUrl}}/api/v1/invoices/1/approve",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -107,7 +98,393 @@
 								"v1",
 								"invoices",
 								"1",
-								"status"
+								"approve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Invoice",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/1/reject",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"1",
+								"reject"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Invoice Type",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"INVOICE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/1/type",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"1",
+								"type"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invoices Paginated",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/paginated?page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"paginated"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invoices By Email",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/email/customer@example.com",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"email",
+								"customer@example.com"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Invoices By Email (contains)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/search/email?email=customer",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"search",
+								"email"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "customer"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invoices By Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/status/PENDING",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"status",
+								"PENDING"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invoices By Type",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/type/INVOICE",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"type",
+								"INVOICE"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter By Email And Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/filter?email=customer@example.com&status=PENDING",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"filter"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "customer@example.com"
+								},
+								{
+									"key": "status",
+									"value": "PENDING"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invoices By Date Range",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/date-range?startDate=2024-01-01T00:00:00&endDate=2024-12-31T23:59:59",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"date-range"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2024-01-01T00:00:00"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31T23:59:59"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/dashboard-stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"dashboard-stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Recent Invoices",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/recent?page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"recent"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invoice Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/1/details",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"1",
+								"details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Invoice Exists",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/1/exists",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"1",
+								"exists"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invoice Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/statistics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"statistics"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invoice Metadata",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/1/metadata",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"1",
+								"metadata"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search By Invoice Number",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/invoices/search/invoice-number/INV-2024-001",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"invoices",
+								"search",
+								"invoice-number",
+								"INV-2024-001"
 							]
 						}
 					},

@@ -1,4 +1,4 @@
-package co.edu.itm.invoiceextract.domain.entity;
+package co.edu.itm.invoiceextract.domain.entity.common;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;

@@ -2,7 +2,7 @@ package co.edu.itm.invoiceextract.application.controller;
 
 import co.edu.itm.invoiceextract.application.dto.EmailConfigurationDTO;
 import co.edu.itm.invoiceextract.application.service.EmailConfigurationService;
-import co.edu.itm.invoiceextract.domain.entity.EmailConfiguration;
+import co.edu.itm.invoiceextract.domain.entity.email.EmailConfiguration;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -54,7 +54,7 @@ public class EmailConfigurationController {
         }
     }
 
-    @Operation(summary = "Get Latest Active Email Credentials", description = "Retrieves the latest ACTIVE encrypted credentials for a given username. This endpoint should be used by the Windows service.")
+    @Operation(summary = "Get Latest Active Email Credentials", description = "Retrieves the latest ACTIVE encrypted credentials and encryption key for a given username. This endpoint should be used by the Windows service.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved credentials",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
@@ -67,17 +67,60 @@ public class EmailConfigurationController {
     public ResponseEntity<?> getConfiguration(@Parameter(description = "Username for the email configuration to retrieve") @PathVariable String username) {
         try {
             Optional<EmailConfiguration> configOpt = service.getConfigurationByUsername(username);
-
             if (configOpt.isPresent()) {
+                EmailConfiguration config = configOpt.get();
                 Map<String, String> credentials = new HashMap<>();
                 credentials.put("username", username);
-                credentials.put("password", configOpt.get().getPassword()); // Return encrypted password
+                credentials.put("password", config.getPassword()); // Return encrypted password
+                credentials.put("key", config.getEncryptionKey()); // Return encryption key
                 return ResponseEntity.ok(credentials);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Configuration not found for username: " + username);
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving email configuration: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "Get latest active email configuration", description = "Retrieves the latest ACTIVE email configuration with encryption key.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved email configuration",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "404", description = "No active configuration found",
+                    content = @Content(mediaType = "text/plain")),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "text/plain"))
+    })
+    @GetMapping("/active")
+    public ResponseEntity<?> getActiveConfiguration() {
+        try {
+            // Get all active configurations
+            List<EmailConfiguration> allConfigs = service.getAllConfigurations();
+            List<EmailConfiguration> activeConfigs = allConfigs.stream()
+                .filter(config -> config.getStatus() == ConfigurationStatus.ACTIVE)
+                .collect(Collectors.toList());
+
+            if (activeConfigs.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No active email configuration found");
+            }
+
+            // Get the most recent active configuration
+            EmailConfiguration latestConfig = activeConfigs.stream()
+                .sorted((c1, c2) -> c2.getCreatedDate().compareTo(c1.getCreatedDate()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Unexpected error processing active configurations"));
+
+            // Return the response in the requested format
+            Map<String, String> response = new HashMap<>();
+            response.put("username", latestConfig.getUsername());
+            response.put("password", latestConfig.getPassword());
+            response.put("key", latestConfig.getEncryptionKey());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error retrieving active email configuration: " + e.getMessage());
         }
     }
 

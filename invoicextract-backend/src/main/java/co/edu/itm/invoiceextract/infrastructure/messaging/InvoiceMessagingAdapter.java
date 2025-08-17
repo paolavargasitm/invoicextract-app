@@ -1,7 +1,7 @@
 package co.edu.itm.invoiceextract.infrastructure.messaging;
 
 import co.edu.itm.invoiceextract.application.service.InvoiceService;
-import co.edu.itm.invoiceextract.domain.entity.Invoice;
+import co.edu.itm.invoiceextract.domain.entity.invoice.Invoice;
 import co.edu.itm.invoiceextract.infrastructure.messaging.dto.InvoiceMessage;
 import co.edu.itm.invoiceextract.infrastructure.messaging.mapper.InvoiceMessageMapper;
 import lombok.AllArgsConstructor;

@@ -1,26 +1,257 @@
-# InvoiceExtract Application
+# 📄 InvoiceExtract Application
 
-This project is a Spring Boot application for managing invoices. It provides a RESTful API for creating, retrieving, updating, and deleting invoices.
+## 🚀 Descripción del Repositorio
 
-## Running the Application
+**InvoiceExtract** es una aplicación empresarial completa desarrollada con **Spring Boot** para la gestión automatizada de facturas. La aplicación proporciona un sistema robusto de extracción, procesamiento y gestión de documentos de facturación con capacidades de integración ERP y procesamiento asíncrono mediante Apache Kafka.
 
-The application is containerized using Docker and can be run with Docker Compose.
+### 🏗️ Arquitectura del Sistema
 
-1.  **Prerequisites:**
-    *   Docker
-    *   Docker Compose
+La aplicación está construida siguiendo principios de **Clean Architecture** y **Domain-Driven Design (DDD)**, organizando el código en las siguientes capas:
 
-2.  **Build and Run:**
-    Navigate to the project's root directory and run the following command:
-    ```sh
-    docker-compose up --build
-    ```
+- **🎯 Domain Layer**: Entidades, enums y repositorios de dominio
+- **🔧 Application Layer**: Casos de uso, servicios, DTOs y controladores REST
+- **🏗️ Infrastructure Layer**: Implementaciones de repositorios, configuraciones y servicios externos
+
+### 🛠️ Stack Tecnológico
+
+| Componente | Tecnología | Versión |
+|------------|------------|---------|
+| **Backend Framework** | Spring Boot | 3.2.0 |
+| **Base de Datos** | MySQL | 8.0 |
+| **Message Broker** | Apache Kafka | 3.5.1 |
+| **Migración DB** | Liquibase | 4.33.0 |
+| **Documentación API** | Swagger/OpenAPI | 3.0 |
+| **Contenedores** | Docker & Docker Compose | Latest |
+| **Administrador DB** | Adminer | Latest |
+
+### 🎯 Funcionalidades Principales
+
+- ✅ **Gestión de Facturas**: CRUD completo con validación y auditoría
+- ✅ **Extracción de Metadatos**: Procesamiento automático de documentos PDF
+- ✅ **Configuración de Email**: Gestión segura de credenciales IMAP/SMTP
+- ✅ **Integración ERP**: Notificaciones y equivalencias de sistemas externos
+- ✅ **Procesamiento Asíncrono**: Cola de mensajes con Kafka
+- ✅ **Auditoría Completa**: Trazabilidad de todas las operaciones
+- ✅ **API RESTful**: Documentada con Swagger/OpenAPI
+- ✅ **Seguridad**: Encriptación de credenciales y validación de datos
+
+## 🐳 Construcción y Despliegue con Docker
+
+### 📋 Prerrequisitos
+
+Antes de ejecutar la aplicación, asegúrate de tener instalado:
+
+- **Docker**: Versión 20.10 o superior
+- **Docker Compose**: Versión 2.0 o superior
+- **Git**: Para clonar el repositorio
+
+### 🚀 Instrucciones de Construcción
+
+#### 1. **Clonar el Repositorio**
+```bash
+git clone <repository-url>
+cd invoicextract-app
+```
+
+#### 2. **Construcción y Ejecución Completa**
+```bash
+# Construir y ejecutar todos los servicios
+docker-compose up --build
+
+# Ejecutar en segundo plano (detached mode)
+docker-compose up --build -d
+```
+
+#### 3. **Comandos Útiles de Docker**
+
+```bash
+# Ver el estado de los contenedores
+docker-compose ps
+
+# Ver logs de todos los servicios
+docker-compose logs
+
+# Ver logs de un servicio específico
+docker-compose logs app
+docker-compose logs mysql
+docker-compose logs kafka
+
+# Detener todos los servicios
+docker-compose down
+
+# Detener y eliminar volúmenes (limpieza completa)
+docker-compose down -v --remove-orphans
+
+# Reconstruir solo la aplicación
+docker-compose up --build app
+```
+
+### 🏗️ Arquitectura de Contenedores
+
+La aplicación utiliza **Docker Compose** para orquestar múltiples servicios:
+
+| Servicio | Puerto | Descripción |
+|----------|--------|-------------|
+| **app** | `8080` | Aplicación Spring Boot principal |
+| **mysql** | `3306` | Base de datos MySQL con persistencia |
+| **kafka** | `9092` | Message broker para procesamiento asíncrono |
+| **adminer** | `8081` | Interfaz web para administración de BD |
+| **liquibase** | - | Servicio de migración de base de datos |
+
+### 🔄 Proceso de Inicialización
+
+1. **MySQL** se inicia y crea la base de datos `invoices`
+2. **Liquibase** ejecuta las migraciones de esquema automáticamente
+3. **Kafka** se configura con los topics necesarios
+4. **Spring Boot App** se conecta a todos los servicios y expone la API
+5. **Adminer** proporciona interfaz web para gestión de BD
+
+### 🌐 URLs de Acceso
+
+Una vez que la aplicación esté ejecutándose, puedes acceder a:
+
+- **🔗 API Principal**: http://localhost:8080/invoicextract
+- **📚 Swagger UI**: http://localhost:8080/invoicextract/swagger-ui/index.html
+- **🗄️ Adminer (DB Admin)**: http://localhost:8081
+- **📊 Health Check**: http://localhost:8080/invoicextract/actuator/health
+
+## 📁 Estructura del Proyecto
+
+```
+invoicextract-app/
+├── 📂 invoicextract-backend/          # Aplicación Spring Boot principal
+│   ├── 📂 src/main/java/
+│   │   └── 📂 co/edu/itm/invoiceextract/
+│   │       ├── 📂 application/        # Capa de aplicación
+│   │       │   ├── 📂 config/         # Configuraciones (Swagger, Security, etc.)
+│   │       │   ├── 📂 controller/     # Controladores REST
+│   │       │   ├── 📂 dto/            # Data Transfer Objects
+│   │       │   ├── 📂 mapper/         # Mappers entre entidades y DTOs
+│   │       │   ├── 📂 service/        # Servicios de aplicación
+│   │       │   └── 📂 usecase/        # Casos de uso específicos
+│   │       ├── 📂 domain/             # Capa de dominio
+│   │       │   ├── 📂 entity/         # Entidades JPA
+│   │       │   ├── 📂 enums/          # Enumeraciones
+│   │       │   └── 📂 repository/     # Interfaces de repositorio
+│   │       └── 📂 infrastructure/     # Capa de infraestructura
+│   │           └── 📂 errors/         # Manejo de errores
+│   └── 📂 src/main/resources/
+│       ├── 📄 application.yml         # Configuración de la aplicación
+│       └── 📂 db/changelog/           # Migraciones Liquibase alternativas
+├── 📂 liquibase/                      # Migraciones de base de datos
+│   ├── 📄 db.changelog-master.yaml    # Changelog principal
+│   ├── 📄 001-create-tables.yaml      # Tablas principales (invoices, invoice_metadata)
+│   ├── 📄 002-create-email-configurations-table.yaml
+│   └── 📄 003-create-processing-error-logs-table.yaml
+├── 📂 keycloak-config/                # Configuración de autenticación
+
+La aplicación incluye configuración completa para despliegue en **Microsoft Azure** usando:
+
+- **Azure App Service**: Para hospedar la aplicación Spring Boot
+- **Azure Database for MySQL**: Base de datos MySQL gestionada
+- **Azure Container Registry**: Almacenamiento de imágenes Docker
+- **Azure Key Vault**: Gestión segura de secretos
+
+#### 📋 Requisitos Previos
+
+- Azure CLI instalado y configurado
+- Docker instalado y ejecutándose
+- Suscripción de Azure con permisos apropiados
+
+#### 🚀 Despliegue Rápido
+
+```bash
+# Navegar al directorio de Azure
+cd azure
+
+# Ejecutar script de despliegue (PowerShell)
+.\deploy.ps1 -ResourceGroupName "invoicextract-rg" `
+             -Location "East US" `
+             -MySqlAdminPassword "TuPasswordSeguro123!" `
+             -EncryptionSecretKey "TuClaveDeEncriptacion123456789012345678901234567890"
+
+# O ejecutar script de despliegue (Bash)
+./deploy.sh "invoicextract-rg" "East US" "TuPasswordSeguro123!" "TuClaveDeEncriptacion123456789012345678901234567890"
+```
+
+#### 🌐 URLs de Azure
+
+Después del despliegue exitoso:
+
+- **🔗 Aplicación**: `https://{app-name}-app.azurewebsites.net/invoicextract`
+- **📚 Swagger UI**: `https://{app-name}-app.azurewebsites.net/invoicextract/swagger-ui/index.html`
+- **📊 Health Check**: `https://{app-name}-app.azurewebsites.net/invoicextract/actuator/health`
+
+📖 **Documentación completa**: Ver [azure/README.md](azure/README.md) para instrucciones detalladas.
+
+## 🛠️ Desarrollo y Configuración
+
+### 🔧 Variables de Entorno
+
+La aplicación utiliza las siguientes variables de entorno principales:
+
+```yaml
+# Base de datos
+SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/invoices
+SPRING_DATASOURCE_USERNAME: root
+SPRING_DATASOURCE_PASSWORD: password
+
+# Kafka
+SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+# Encriptación (⚠️ Cambiar en producción)
+ENCRYPTION_SECRET_KEY: your-secret-key-here
+```
+
+### 🗄️ Esquema de Base de Datos
+
+La aplicación gestiona las siguientes tablas principales:
+
+| Tabla | Descripción | Entidad Java |
+|-------|-------------|--------------|
+| `invoices` | Información principal de facturas | `Invoice.java` |
+| `invoice_metadata` | Metadatos detallados de facturas | `InvoiceMetadata.java` |
+| `email_configurations` | Configuraciones de email IMAP/SMTP | `EmailConfiguration.java` |
+| `processing_error_logs` | Logs de errores de procesamiento | `ProcessingErrorLog.java` |
+
+### 🔄 Migraciones de Base de Datos
+
+Las migraciones se gestionan con **Liquibase** y se ejecutan automáticamente al iniciar la aplicación:
+
+- ✅ **Changesets separados por tabla** para mejor organización
+- ✅ **Definiciones iniciales** (no cambios incrementales)
+- ✅ **Tipos ENUM** correctamente configurados
+- ✅ **Campos de auditoría** consistentes en todas las tablas
+
+### 🚨 Solución de Problemas
+
+#### Problema: "Table already exists"
+```bash
+# Limpiar volúmenes y reiniciar desde cero
+docker-compose down -v --remove-orphans
+docker-compose up --build
+```
+
+#### Problema: Errores de conexión a MySQL
+```bash
+# Verificar que MySQL esté completamente iniciado
+docker-compose logs mysql
+# Esperar a ver: "ready for connections"
+```
+
+#### Problema: Kafka no se conecta
+```bash
+# Verificar logs de Kafka
+docker-compose logs kafka
+# Reiniciar solo Kafka si es necesario
+docker-compose restart kafka
+```
 
 ## API Documentation
 
 The API is documented using Swagger/OpenAPI. Once the application is running, you can access the Swagger UI at the following URL:
 
-[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+[http://localhost:8080/invoicextract/swagger-ui/index.html](http://localhost:8080/invoicextract/swagger-ui/index.html)
 
 ### Auditing and Traceability
 

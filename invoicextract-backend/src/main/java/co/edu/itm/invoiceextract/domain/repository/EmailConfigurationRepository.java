@@ -1,6 +1,6 @@
 package co.edu.itm.invoiceextract.domain.repository;
 
-import co.edu.itm.invoiceextract.domain.entity.EmailConfiguration;
+import co.edu.itm.invoiceextract.domain.entity.email.EmailConfiguration;
 import co.edu.itm.invoiceextract.domain.entity.ConfigurationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -19,5 +19,5 @@ public interface EmailConfigurationRepository extends JpaRepository<EmailConfigu
      */
     List<EmailConfiguration> findByUsernameAndStatus(String username, ConfigurationStatus status);
 
-    Optional<EmailConfiguration> findFirstByUsernameAndStatusOrderByCreatedAtDesc(String username, ConfigurationStatus status);
+    Optional<EmailConfiguration> findFirstByUsernameAndStatusOrderByCreatedDateDesc(String username, ConfigurationStatus status);
 }

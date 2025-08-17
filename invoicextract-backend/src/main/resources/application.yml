@@ -3,6 +3,13 @@ spring:
     level:
       org.springframework: DEBUG
 
+  # Jackson Configuration for Date Serialization
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+    time-zone: UTC
+
   # Kafka Configuration
   kafka:
     consumer:

@@ -1,13 +1,13 @@
-package co.edu.itm.invoiceextract.domain.entity;
+package co.edu.itm.invoiceextract.domain.entity.email;
 
+import co.edu.itm.invoiceextract.domain.entity.ConfigurationStatus;
+import co.edu.itm.invoiceextract.domain.entity.common.AuditableEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -32,5 +32,8 @@ public class EmailConfiguration extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ConfigurationStatus status = ConfigurationStatus.ACTIVE;
+
+    @Column(name = "encryption_key", nullable = false, length = 64)
+    private String encryptionKey;
 
 }

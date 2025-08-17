@@ -1,8 +1,8 @@
 package co.edu.itm.invoiceextract.application.usecase;
 
 import co.edu.itm.invoiceextract.application.dto.DashboardStatsDTO;
-import co.edu.itm.invoiceextract.domain.entity.Invoice;
-import co.edu.itm.invoiceextract.domain.entity.InvoiceMetadata;
+import co.edu.itm.invoiceextract.domain.entity.invoice.Invoice;
+import co.edu.itm.invoiceextract.domain.entity.invoice.InvoiceMetadata;
 import co.edu.itm.invoiceextract.domain.enums.InvoiceStatus;
 import co.edu.itm.invoiceextract.domain.enums.InvoiceType;
 import co.edu.itm.invoiceextract.domain.repository.InvoiceMetadataRepository;
@@ -52,11 +52,11 @@ public class FetchInvoicesUseCase {
     }
 
     public List<Invoice> findByEmail(String email) {
-        return invoiceRepository.findByEmail(email);
+        return invoiceRepository.findByMetadataCustomerEmail(email);
     }
 
     public List<Invoice> findByEmailContaining(String email) {
-        return invoiceRepository.findByEmailContainingIgnoreCase(email);
+        return invoiceRepository.findByMetadataCustomerEmailContainingIgnoreCase(email);
     }
 
     public List<Invoice> findByStatus(InvoiceStatus status) {
@@ -68,11 +68,14 @@ public class FetchInvoicesUseCase {
     }
 
     public List<Invoice> findByEmailAndStatus(String email, InvoiceStatus status) {
-        return invoiceRepository.findByEmailAndStatus(email, status);
+        return invoiceRepository.findByMetadataCustomerEmailAndStatus(email, status);
     }
 
     public List<Invoice> findByDateBetween(LocalDateTime startDate, LocalDateTime endDate) {
-        return invoiceRepository.findByDateBetween(startDate, endDate);
+        // Convertir LocalDateTime a LocalDate para la nueva consulta
+        java.time.LocalDate startLocalDate = startDate.toLocalDate();
+        java.time.LocalDate endLocalDate = endDate.toLocalDate();
+        return invoiceRepository.findByMetadataIssueDateBetween(startLocalDate, endLocalDate);
     }
 
     public boolean existsById(Long id) {
@@ -106,7 +109,7 @@ public class FetchInvoicesUseCase {
             InvoiceMetadata metadata = invoice.getMetadata();
             return new RecentInvoiceDTO(
                     invoice.getId(),
-                    invoice.getDate(),
+                    metadata != null ? metadata.getIssueDate().atStartOfDay() : null,
                     metadata != null ? metadata.getSupplierName() : null,
                     metadata != null ? metadata.getTotalAmount() : null,
                     invoice.getStatus()

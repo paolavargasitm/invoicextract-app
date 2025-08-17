@@ -1,7 +1,8 @@
 databaseChangeLog:
   - changeSet:
-      id: "create-email-configurations"
-      author: "paola"
+      id: "create-email-configurations-table"
+      author: "system"
+      comment: "Initial creation of email_configurations table matching EmailConfiguration entity"
       changes:
         - createTable:
             tableName: email_configurations
@@ -18,48 +19,41 @@ databaseChangeLog:
                   type: VARCHAR(255)
                   constraints:
                     nullable: false
+                    unique: true
               - column:
                   name: password
                   type: VARCHAR(255)
                   constraints:
                     nullable: false
               - column:
-                  name: host
-                  type: VARCHAR(255)
+                  name: encryption_key
+                  type: VARCHAR(64)
                   constraints:
                     nullable: false
+                    unique: true
+                  defaultValue: "REPLACE(UUID(), '-', '')"
               - column:
-                  name: port
-                  type: INT
-                  constraints:
-                    nullable: false
-              - column:
-                  name: protocol
-                  type: VARCHAR(255)
-                  constraints:
-                    nullable: false
-              - column: 
                   name: status
-                  type: VARCHAR(50)
+                  type: ENUM('ACTIVE', 'INACTIVE')
                   constraints:
                     nullable: false
               - column:
                   name: created_date
-                  type: DATETIME
+                  type: TIMESTAMP
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
                   name: modified_date
-                  type: DATETIME
+                  type: TIMESTAMP
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
                   name: created_by
                   type: VARCHAR(255)
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
                   name: modified_by
                   type: VARCHAR(255)
                   constraints:
-                    nullable: false
+                    nullable: true

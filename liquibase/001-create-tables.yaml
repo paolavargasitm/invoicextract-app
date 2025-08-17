@@ -1,7 +1,8 @@
 databaseChangeLog:
   - changeSet:
-      id: 1
-      author: paola
+      id: "create-invoices-and-metadata-tables"
+      author: "system"
+      comment: "Initial creation of invoices and invoice_metadata tables matching entity definitions"
       changes:
         - createTable:
             tableName: invoices
@@ -14,45 +15,40 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: email
-                  type: VARCHAR(255)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: date
-                  type: DATETIME
-                  constraints:
-                    nullable: false
-              - column:
                   name: status
-                  type: VARCHAR(255)
+                  type: ENUM('PENDING', 'APPROVED', 'REJECTED', 'PAID')
                   constraints:
                     nullable: false
               - column:
                   name: type
-                  type: VARCHAR(255)
+                  type: ENUM('INVOICE', 'CREDIT_NOTE', 'DEBIT_NOTE')
                   constraints:
                     nullable: false
+              - column:
+                  name: file_url
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: true
               - column:
                   name: created_date
-                  type: DATETIME
+                  type: TIMESTAMP
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
                   name: modified_date
-                  type: DATETIME
+                  type: TIMESTAMP
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
                   name: created_by
                   type: VARCHAR(255)
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
                   name: modified_by
                   type: VARCHAR(255)
                   constraints:
-                    nullable: false
+                    nullable: true
         - createTable:
             tableName: invoice_metadata
             columns:
@@ -72,21 +68,29 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: invoice_number
-                  type: VARCHAR(255)
+                  type: VARCHAR(100)
               - column:
                   name: customer_name
                   type: VARCHAR(255)
               - column:
                   name: customer_email
                   type: VARCHAR(255)
+                  constraints:
+                    nullable: true
               - column:
                   name: customer_address
-                  type: VARCHAR(255)
+                  type: TEXT
               - column:
                   name: supplier_name
                   type: VARCHAR(255)
               - column:
-                  name: total
+                  name: supplier_email
+                  type: VARCHAR(255)
+              - column:
+                  name: supplier_address
+                  type: TEXT
+              - column:
+                  name: amount
                   type: DECIMAL(15, 2)
               - column:
                   name: currency
@@ -95,22 +99,63 @@ databaseChangeLog:
                   name: tax_amount
                   type: DECIMAL(15, 2)
               - column:
-                  name: created_date
-                  type: DATETIME
+                  name: subtotal
+                  type: DECIMAL(15, 2)
+              - column:
+                  name: total_amount
+                  type: DECIMAL(15, 2)
+              - column:
+                  name: issue_date
+                  type: DATE
                   constraints:
                     nullable: false
               - column:
-                  name: modified_date
-                  type: DATETIME
+                  name: due_date
+                  type: DATE
+              - column:
+                  name: payment_terms
+                  type: VARCHAR(100)
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: notes
+                  type: TEXT
+              - column:
+                  name: pdf_url
+                  type: VARCHAR(500)
+              - column:
+                  name: original_filename
+                  type: VARCHAR(255)
+              - column:
+                  name: file_size
+                  type: BIGINT
+              - column:
+                  name: extracted_data
+                  type: TEXT
+              - column:
+                  name: confidence_score
+                  type: DECIMAL(5, 4)
+              - column:
+                  name: processing_status
+                  type: VARCHAR(50)
+              - column:
+                  name: created_date
+                  type: TIMESTAMP
                   constraints:
-                    nullable: false
+                    nullable: true
+              - column:
+                  name: modified_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
               - column:
                   name: created_by
                   type: VARCHAR(255)
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
                   name: modified_by
                   type: VARCHAR(255)
                   constraints:
-                    nullable: false
+                    nullable: true

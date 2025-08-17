@@ -1,23 +1,12 @@
 package co.edu.itm.invoiceextract.application.service;
 
-import co.edu.itm.invoiceextract.domain.entity.Invoice;
-import co.edu.itm.invoiceextract.domain.entity.InvoiceMetadata;
-import co.edu.itm.invoiceextract.domain.enums.InvoiceStatus;
+import co.edu.itm.invoiceextract.domain.entity.invoice.Invoice;
+import co.edu.itm.invoiceextract.domain.entity.invoice.InvoiceMetadata;
 import co.edu.itm.invoiceextract.domain.enums.InvoiceType;
 import co.edu.itm.invoiceextract.domain.repository.InvoiceRepository;
-import co.edu.itm.invoiceextract.application.dto.DashboardStatsDTO;
-import co.edu.itm.invoiceextract.application.dto.InvoiceDetailDTO;
-import co.edu.itm.invoiceextract.application.dto.RecentInvoiceDTO;
 import co.edu.itm.invoiceextract.domain.repository.InvoiceMetadataRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -48,10 +37,10 @@ public class InvoiceService {
     public Invoice update(Long id, Invoice invoiceDetails) {
         return invoiceRepository.findById(id)
                 .map(invoice -> {
-                    invoice.setEmail(invoiceDetails.getEmail());
-                    invoice.setDate(invoiceDetails.getDate());
+                    // Updated to remove references to email and date which were moved to metadata
                     invoice.setStatus(invoiceDetails.getStatus());
                     invoice.setType(invoiceDetails.getType());
+                    invoice.setFileUrl(invoiceDetails.getFileUrl());
                     
                     Invoice updatedInvoice = invoiceRepository.save(invoice);
                     

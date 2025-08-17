@@ -1,7 +1,7 @@
 package co.edu.itm.invoiceextract.infrastructure.messaging.mapper;
 
-import co.edu.itm.invoiceextract.domain.entity.Invoice;
-import co.edu.itm.invoiceextract.domain.entity.InvoiceMetadata;
+import co.edu.itm.invoiceextract.domain.entity.invoice.Invoice;
+import co.edu.itm.invoiceextract.domain.entity.invoice.InvoiceMetadata;
 import co.edu.itm.invoiceextract.infrastructure.messaging.dto.InvoiceMessage;
 import co.edu.itm.invoiceextract.infrastructure.messaging.dto.InvoiceMetadataMessage;
 import org.mapstruct.AfterMapping;
@@ -13,11 +13,9 @@ import org.mapstruct.MappingTarget;
 public interface InvoiceMessageMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
-    @Mapping(target = "modifiedDate", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "modifiedDate", ignore = true)
     @Mapping(target = "modifiedBy", ignore = true)
     Invoice toInvoiceEntity(InvoiceMessage message);
 

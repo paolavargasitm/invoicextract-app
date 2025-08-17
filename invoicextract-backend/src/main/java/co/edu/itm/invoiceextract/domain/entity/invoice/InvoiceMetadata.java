@@ -1,12 +1,12 @@
-package co.edu.itm.invoiceextract.domain.entity;
+package co.edu.itm.invoiceextract.domain.entity.invoice;
 
+import co.edu.itm.invoiceextract.domain.entity.common.AuditableEntity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "invoice_metadata")
@@ -82,7 +82,8 @@ public class InvoiceMetadata extends AuditableEntity {
     @Schema(description = "Total amount including taxes", example = "1500.50")
     private BigDecimal totalAmount;
 
-    @Column(name = "issue_date")
+    @Column(name = "issue_date", nullable = false)
+    @NotNull(message = "Issue date is required")
     @Schema(description = "Issue date of the invoice", example = "2024-01-15")
     private LocalDate issueDate;
 
@@ -133,18 +134,10 @@ public class InvoiceMetadata extends AuditableEntity {
     @Schema(description = "Processing status", example = "COMPLETED")
     private String processingStatus;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @Schema(description = "Timestamp when the metadata was created")
-    private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
-    @Schema(description = "Timestamp when the metadata was last updated")
-    private LocalDateTime updatedAt;
 
     // Constructors
     public InvoiceMetadata() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
         this.currency = "USD";
         this.processingStatus = "PENDING";
     }
@@ -353,29 +346,9 @@ public class InvoiceMetadata extends AuditableEntity {
 
     public void setProcessingStatus(String processingStatus) {
         this.processingStatus = processingStatus;
-        this.updatedAt = LocalDateTime.now();
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 
     @Override
     public String toString() {

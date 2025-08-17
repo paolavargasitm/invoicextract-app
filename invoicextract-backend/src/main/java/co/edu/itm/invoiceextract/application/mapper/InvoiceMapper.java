@@ -2,8 +2,8 @@ package co.edu.itm.invoiceextract.application.mapper;
 
 import co.edu.itm.invoiceextract.application.dto.InvoiceRequestDTO;
 import co.edu.itm.invoiceextract.application.dto.InvoiceMetadataRequestDTO;
-import co.edu.itm.invoiceextract.domain.entity.Invoice;
-import co.edu.itm.invoiceextract.domain.entity.InvoiceMetadata;
+import co.edu.itm.invoiceextract.domain.entity.invoice.Invoice;
+import co.edu.itm.invoiceextract.domain.entity.invoice.InvoiceMetadata;
 import co.edu.itm.invoiceextract.domain.enums.InvoiceStatus;
 import org.springframework.stereotype.Component;
 
@@ -16,20 +16,31 @@ public class InvoiceMapper {
         }
 
         Invoice invoice = new Invoice();
-        invoice.setEmail(dto.getEmail());
-        invoice.setDate(dto.getDate());
         invoice.setStatus(dto.getStatus() != null ? dto.getStatus() : InvoiceStatus.PENDING);
         invoice.setType(dto.getType());
-
+        
         // Convert metadata if present
         if (dto.getMetadata() != null) {
             InvoiceMetadata metadata = toMetadataEntity(dto.getMetadata());
+            
+            if (dto.getEmail() != null && metadata.getCustomerEmail() == null) {
+                metadata.setCustomerEmail(dto.getEmail());
+            }
+            if (dto.getDate() != null && metadata.getIssueDate() == null) {
+                metadata.setIssueDate(dto.getDate().toLocalDate());
+            }
+            
             invoice.setMetadata(metadata);
-
-            // Lift important fields from metadata to the main invoice entity
-            invoice.setProvider(metadata.getSupplierName());
-            invoice.setAmount(metadata.getTotalAmount());
-            invoice.setCurrency(metadata.getCurrency());
+        } else if (dto.getEmail() != null || dto.getDate() != null) {
+            
+            InvoiceMetadata metadata = new InvoiceMetadata();
+            if (dto.getEmail() != null) {
+                metadata.setCustomerEmail(dto.getEmail());
+            }
+            if (dto.getDate() != null) {
+                metadata.setIssueDate(dto.getDate().toLocalDate());
+            }
+            invoice.setMetadata(metadata);
         }
 
         return invoice;
@@ -74,13 +85,16 @@ public class InvoiceMapper {
         }
 
         InvoiceRequestDTO dto = new InvoiceRequestDTO();
-        dto.setEmail(entity.getEmail());
-        dto.setDate(entity.getDate());
         dto.setStatus(entity.getStatus());
         dto.setType(entity.getType());
-
+        
         // Convert metadata if present
         if (entity.getMetadata() != null) {
+            dto.setEmail(entity.getMetadata().getCustomerEmail());
+            if (entity.getMetadata().getIssueDate() != null) {
+                dto.setDate(entity.getMetadata().getIssueDate().atStartOfDay());
+            }
+            
             InvoiceMetadataRequestDTO metadataDto = toMetadataDto(entity.getMetadata());
             dto.setMetadata(metadataDto);
         }

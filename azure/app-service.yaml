@@ -1,0 +1,84 @@
+# Azure App Service Configuration for InvoiceExtract
+# This file defines the Azure App Service deployment configuration
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: invoicextract-app
+  labels:
+    app: invoicextract
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: invoicextract
+  template:
+    metadata:
+      labels:
+        app: invoicextract
+    spec:
+      containers:
+      - name: invoicextract-backend
+        image: invoicextract:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "azure"
+        - name: SPRING_DATASOURCE_URL
+          valueFrom:
+            secretKeyRef:
+              name: azure-db-secret
+              key: database-url
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: azure-db-secret
+              key: database-username
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: azure-db-secret
+              key: database-password
+        - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+          valueFrom:
+            configMapKeyRef:
+              name: azure-config
+              key: kafka-servers
+        - name: ENCRYPTION_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: encryption-key
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /invoicextract/actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /invoicextract/actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: invoicextract-service
+spec:
+  selector:
+    app: invoicextract
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: LoadBalancer

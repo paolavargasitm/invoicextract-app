@@ -3,11 +3,10 @@ package co.edu.itm.invoiceextract.domain.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import co.edu.itm.invoiceextract.domain.entity.InvoiceMetadata;
+import co.edu.itm.invoiceextract.domain.entity.invoice.InvoiceMetadata;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.math.BigDecimal;
 import java.util.Optional;
 
 public interface InvoiceMetadataRepository extends JpaRepository<InvoiceMetadata, Long> {
