@@ -5,3 +5,5 @@ databaseChangeLog:
       file: 002-create-email-configurations-table.yaml
   - include:
       file: 003-create-processing-error-logs-table.yaml
+  - include:
+      file: 004-create-invoices-v2-tables.yaml
