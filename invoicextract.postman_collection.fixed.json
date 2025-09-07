@@ -1,0 +1,533 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "InvoiceExtract API - Complete Collection",
+		"description": "Comprehensive API collection for InvoiceExtract application with status management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "Invoices",
+			"item": [
+				{
+					"name": "Create Invoice (Sync)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"DocumentType\": \"FACTURA\",\n  \"DocumentNumber\": \"INV-2024-001\",\n  \"ReceiverTaxId\": \"123456789\",\n  \"ReceiverTaxIdWithoutCheckDigit\": \"12345678\",\n  \"ReceiverBusinessName\": \"Customer Corp S.A.S\",\n  \"SenderTaxId\": \"987654321\",\n  \"SenderTaxIdWithoutCheckDigit\": \"98765432\",\n  \"SenderBusinessName\": \"Supplier Inc S.A.S\",\n  \"RelatedDocumentNumber\": \"REL-001\",\n  \"Amount\": \"1500.75\",\n  \"IssueDate\": \"2024-08-03\",\n  \"DueDate\": \"2024-09-03\",\n  \"InvoiceItem\": {\n    \"ItemCode\": \"PROD-001\",\n    \"Description\": \"Product Description\",\n    \"Quantity\": 10,\n    \"Unit\": \"UND\",\n    \"UnitPrice\": \"150.00\",\n    \"Subtotal\": \"1500.00\",\n    \"TaxAmount\": \"0.75\",\n    \"Total\": \"1500.75\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/invoices",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices"
+							]
+						},
+						"description": "Creates an invoice synchronously with validation using ProcessInboundInvoiceUseCase"
+					}
+				},
+				{
+					"name": "Create Invoice (Async)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"DocumentType\": \"FACTURA\",\n  \"DocumentNumber\": \"INV-2024-002\",\n  \"ReceiverTaxId\": \"123456789\",\n  \"ReceiverTaxIdWithoutCheckDigit\": \"12345678\",\n  \"ReceiverBusinessName\": \"Customer Corp S.A.S\",\n  \"SenderTaxId\": \"987654321\",\n  \"SenderTaxIdWithoutCheckDigit\": \"98765432\",\n  \"SenderBusinessName\": \"Supplier Inc S.A.S\",\n  \"RelatedDocumentNumber\": \"REL-002\",\n  \"Amount\": \"2500.50\",\n  \"IssueDate\": \"2024-08-03\",\n  \"DueDate\": \"2024-09-03\",\n  \"InvoiceItem\": {\n    \"ItemCode\": \"PROD-002\",\n    \"Description\": \"Another Product\",\n    \"Quantity\": 5,\n    \"Unit\": \"UND\",\n    \"UnitPrice\": \"500.10\",\n    \"Subtotal\": \"2500.50\",\n    \"TaxAmount\": \"0.00\",\n    \"Total\": \"2500.50\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/invoices/async",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"async"
+							]
+						},
+						"description": "Creates an invoice asynchronously via Kafka messaging"
+					}
+				},
+				{
+					"name": "Get All Invoices",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices"
+							]
+						},
+						"description": "Retrieve all invoices with items"
+					}
+				},
+				{
+					"name": "Get Invoices (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices?page=0&size=10&sort=issueDate,desc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "sort",
+									"value": "issueDate,desc"
+								}
+							]
+						},
+						"description": "Retrieve invoices with pagination and sorting"
+					}
+				},
+				{
+					"name": "Get Invoice by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/{{invoice_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"{{invoice_id}}"
+							]
+						},
+						"description": "Retrieve a specific invoice by its ID"
+					}
+				},
+				{
+					"name": "Get Invoice by Document Number",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/document/{{document_number}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"document",
+								"{{document_number}}"
+							]
+						},
+						"description": "Retrieve an invoice by its document number"
+					}
+				},
+				{
+					"name": "Get Invoice Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/{{invoice_id}}/details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"{{invoice_id}}",
+								"details"
+							]
+						},
+						"description": "Get detailed invoice information"
+					}
+				},
+				{
+					"name": "Get Invoices by Sender Tax ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/sender/{{sender_tax_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"sender",
+								"{{sender_tax_id}}"
+							]
+						},
+						"description": "Retrieve all invoices from a specific sender"
+					}
+				},
+				{
+					"name": "Get Invoices by Document Type",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/type/FACTURA",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"type",
+								"FACTURA"
+							]
+						},
+						"description": "Retrieve all invoices with a specific document type (FACTURA, NOTA_CREDITO, NOTA_DEBITO)"
+					}
+				},
+				{
+					"name": "Get Invoices by Status - PENDING",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/status/PENDING",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"status",
+								"PENDING"
+							]
+						},
+						"description": "Retrieve all invoices with PENDING status"
+					}
+				},
+				{
+					"name": "Get Invoices by Status - APPROVED",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/status/APPROVED",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"status",
+								"APPROVED"
+							]
+						},
+						"description": "Retrieve all invoices with APPROVED status"
+					}
+				},
+				{
+					"name": "Get Invoices by Status - REJECTED",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/status/REJECTED",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"status",
+								"REJECTED"
+							]
+						},
+						"description": "Retrieve all invoices with REJECTED status"
+					}
+				},
+				{
+					"name": "Get Invoices by Date Range",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/date-range?startDate=2024-08-01&endDate=2024-08-31",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"date-range"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2024-08-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-08-31"
+								}
+							]
+						},
+						"description": "Retrieve invoices within a specific date range"
+					}
+				},
+				{
+					"name": "Approve Invoice",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/{{invoice_id}}/approve",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"{{invoice_id}}",
+								"approve"
+							]
+						},
+						"description": "Approve an invoice by ID - changes status to APPROVED"
+					}
+				},
+				{
+					"name": "Reject Invoice",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/{{invoice_id}}/reject",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"{{invoice_id}}",
+								"reject"
+							]
+						},
+						"description": "Reject an invoice by ID - changes status to REJECTED"
+					}
+				}
+			]
+		},
+		{
+			"name": "Dashboard",
+			"item": [
+				{
+					"name": "Get Recent Invoices",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/recent?limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"recent"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get the most recent invoices for dashboard"
+					}
+				},
+				{
+					"name": "Get Dashboard Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/invoices/dashboard/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"dashboard",
+								"stats"
+							]
+						},
+						"description": "Get invoice statistics for dashboard"
+					}
+				}
+			]
+		},
+		{
+			"name": "Email Configuration",
+			"item": [
+				{
+					"name": "Create/Update Email Configuration",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"mySecurePassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/config/email",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"config",
+								"email"
+							]
+						},
+						"description": "Create or update email configuration for a user"
+					}
+				},
+				{
+					"name": "Get Email Configuration by Username",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/config/email/{{username}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"config",
+								"email",
+								"{{username}}"
+							]
+						},
+						"description": "Retrieve email configuration for a specific user"
+					}
+				},
+				{
+					"name": "Get Active Email Configurations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/config/email/active",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"config",
+								"email",
+								"active"
+							]
+						},
+						"description": "Get all active email configurations"
+					}
+				},
+				{
+					"name": "Filter Email Configurations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/config/email/filter?username={{username}}&status=ACTIVE",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"config",
+								"email",
+								"filter"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "{{username}}"
+								},
+								{
+									"key": "status",
+									"value": "ACTIVE"
+								}
+							]
+						},
+						"description": "Filter email configurations by username and status (ACTIVE or INACTIVE)"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "invoice_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "document_number",
+			"value": "INV-2024-001",
+			"type": "string"
+		},
+		{
+			"key": "sender_tax_id",
+			"value": "987654321",
+			"type": "string"
+		},
+		{
+			"key": "username",
+			"value": "admin@company.com",
+			"type": "string"
+		}
+	]
+}

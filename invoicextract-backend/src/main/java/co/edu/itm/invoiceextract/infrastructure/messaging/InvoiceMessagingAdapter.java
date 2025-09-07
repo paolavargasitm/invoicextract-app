@@ -1,5 +1,6 @@
 package co.edu.itm.invoiceextract.infrastructure.messaging;
 
+import co.edu.itm.invoiceextract.application.dto.invoice.InvoiceRequestDTO;
 import co.edu.itm.invoiceextract.application.service.InvoiceService;
 import co.edu.itm.invoiceextract.domain.entity.invoice.Invoice;
 import co.edu.itm.invoiceextract.infrastructure.messaging.dto.InvoiceMessage;
@@ -18,9 +19,10 @@ public class InvoiceMessagingAdapter {
     private final InvoiceMessageMapper invoiceMessageMapper;
 
     public void processInvoice(InvoiceMessage message) {
-        logger.info("Mapping and saving invoice from message for provider: {}", message.getProvider());
-        Invoice invoice = invoiceMessageMapper.toInvoiceEntity(message);
-        Invoice savedInvoice = invoiceService.save(invoice);
+        logger.info("Mapping and saving invoice from message for sender: {}", message.getSenderTaxId());
+        InvoiceRequestDTO invoice = invoiceMessageMapper.toDto(message);
+        Invoice savedInvoice = invoiceService.create(invoice);
+
         logger.info("Invoice with ID {} saved successfully.", savedInvoice.getId());
     }
 }

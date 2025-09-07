@@ -21,7 +21,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: type
-                  type: ENUM('INVOICE', 'CREDIT_NOTE', 'DEBIT_NOTE')
+                  type: ENUM('FACTURA', 'NOTA_CREDITO', 'NOTA_DEBITO')
                   constraints:
                     nullable: false
               - column:
