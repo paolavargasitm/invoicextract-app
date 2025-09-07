@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/config/email")
+@RequestMapping("/api/config/email")
 @Tag(name = "Email Configuration", description = "API for managing email service credentials securely")
 @CrossOrigin(origins = "*")
 public class EmailConfigurationController {

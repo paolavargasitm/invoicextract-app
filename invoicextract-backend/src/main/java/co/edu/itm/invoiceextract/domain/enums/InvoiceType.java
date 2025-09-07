@@ -4,14 +4,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Types of invoice documents")
 public enum InvoiceType {
-    @Schema(description = "Standard invoice")
-    INVOICE("Invoice"),
+    @Schema(description = "Factura estándar")
+    FACTURA("Factura"),
     
-    @Schema(description = "Credit note - reduces amount owed")
-    CREDIT_NOTE("Credit Note"),
+    @Schema(description = "Nota crédito - reduce el monto adeudado")
+    NOTA_CREDITO("Nota Crédito"),
     
-    @Schema(description = "Debit note - increases amount owed")
-    DEBIT_NOTE("Debit Note");
+    @Schema(description = "Nota débito - aumenta el monto adeudado")
+    NOTA_DEBITO("Nota Débito");
 
     private final String displayName;
 

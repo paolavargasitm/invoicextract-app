@@ -1,36 +1,68 @@
 package co.edu.itm.invoiceextract.infrastructure.messaging.mapper;
 
-import co.edu.itm.invoiceextract.domain.entity.invoice.Invoice;
-import co.edu.itm.invoiceextract.domain.entity.invoice.InvoiceMetadata;
+import co.edu.itm.invoiceextract.application.dto.invoice.InvoiceRequestDTO;
+import co.edu.itm.invoiceextract.application.dto.invoice.InvoiceItemDTO;
 import co.edu.itm.invoiceextract.infrastructure.messaging.dto.InvoiceMessage;
-import co.edu.itm.invoiceextract.infrastructure.messaging.dto.InvoiceMetadataMessage;
-import org.mapstruct.AfterMapping;
+import co.edu.itm.invoiceextract.infrastructure.messaging.dto.InvoiceItemMessage;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface InvoiceMessageMapper {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdDate", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "modifiedDate", ignore = true)
-    @Mapping(target = "modifiedBy", ignore = true)
-    Invoice toInvoiceEntity(InvoiceMessage message);
+    @Mapping(target = "fileUrl", ignore = true)
+    @Mapping(target = "email", ignore = true)
+    @Mapping(target = "status", constant = "PENDING")
+    @Mapping(target = "date", expression = "java(java.time.LocalDateTime.now())")
+    @Mapping(target = "documentType", source = "documentType")
+    @Mapping(target = "documentNumber", source = "documentNumber")
+    @Mapping(target = "receiverTaxId", source = "receiverTaxId")
+    @Mapping(target = "receiverTaxIdWithoutCheckDigit", source = "receiverTaxIdWithoutCheckDigit")
+    @Mapping(target = "receiverBusinessName", source = "receiverBusinessName")
+    @Mapping(target = "senderTaxId", source = "senderTaxId")
+    @Mapping(target = "senderTaxIdWithoutCheckDigit", source = "senderTaxIdWithoutCheckDigit")
+    @Mapping(target = "senderBusinessName", source = "senderBusinessName")
+    @Mapping(target = "relatedDocumentNumber", source = "relatedDocumentNumber")
+    @Mapping(target = "amount", source = "amount")
+    @Mapping(target = "issueDate", source = "issueDate")
+    @Mapping(target = "dueDate", source = "dueDate")
+    @Mapping(target = "invoiceItem", source = "invoiceItem")
+    InvoiceMessage toMessage(InvoiceRequestDTO dto);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "invoice", ignore = true)
-    @Mapping(target = "createdDate", ignore = true)
-    @Mapping(target = "modifiedDate", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "modifiedBy", ignore = true)
-    InvoiceMetadata toInvoiceMetadataEntity(InvoiceMetadataMessage metadataMessage);
+    // Direct mapping back to DTO - all fields map 1:1
+    @Mapping(target = "documentType", source = "documentType")
+    @Mapping(target = "documentNumber", source = "documentNumber")
+    @Mapping(target = "receiverTaxId", source = "receiverTaxId")
+    @Mapping(target = "receiverTaxIdWithoutCheckDigit", source = "receiverTaxIdWithoutCheckDigit")
+    @Mapping(target = "receiverBusinessName", source = "receiverBusinessName")
+    @Mapping(target = "senderTaxId", source = "senderTaxId")
+    @Mapping(target = "senderTaxIdWithoutCheckDigit", source = "senderTaxIdWithoutCheckDigit")
+    @Mapping(target = "senderBusinessName", source = "senderBusinessName")
+    @Mapping(target = "relatedDocumentNumber", source = "relatedDocumentNumber")
+    @Mapping(target = "amount", source = "amount")
+    @Mapping(target = "issueDate", source = "issueDate")
+    @Mapping(target = "dueDate", source = "dueDate")
+    @Mapping(target = "invoiceItem", source = "invoiceItem")
+    InvoiceRequestDTO toDto(InvoiceMessage message);
 
-    @AfterMapping
-    default void linkMetadata(@MappingTarget Invoice invoice) {
-        if (invoice.getMetadata() != null) {
-            invoice.getMetadata().setInvoice(invoice);
-        }
-    }
+    // Direct mapping for invoice items
+    @Mapping(target = "itemCode", source = "itemCode")
+    @Mapping(target = "description", source = "description")
+    @Mapping(target = "quantity", source = "quantity")
+    @Mapping(target = "unit", source = "unit")
+    @Mapping(target = "unitPrice", source = "unitPrice")
+    @Mapping(target = "subtotal", source = "subtotal")
+    @Mapping(target = "taxAmount", source = "taxAmount")
+    @Mapping(target = "total", source = "total")
+    InvoiceItemDTO toInvoiceItemDto(InvoiceItemMessage itemMessage);
+
+    @Mapping(target = "itemCode", source = "itemCode")
+    @Mapping(target = "description", source = "description")
+    @Mapping(target = "quantity", source = "quantity")
+    @Mapping(target = "unit", source = "unit")
+    @Mapping(target = "unitPrice", source = "unitPrice")
+    @Mapping(target = "subtotal", source = "subtotal")
+    @Mapping(target = "taxAmount", source = "taxAmount")
+    @Mapping(target = "total", source = "total")
+    InvoiceItemMessage toInvoiceItemMessage(InvoiceItemDTO itemDto);
 }

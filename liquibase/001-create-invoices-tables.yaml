@@ -1,8 +1,8 @@
 databaseChangeLog:
   - changeSet:
-      id: "create-invoices-and-metadata-tables"
+      id: "create-invoices-and-items-tables"
       author: "system"
-      comment: "Initial creation of invoices and invoice_metadata tables matching entity definitions"
+      comment: "Create tables to persist the invoice JSON structure in a normalized way"
       changes:
         - createTable:
             tableName: invoices
@@ -15,20 +15,45 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: status
-                  type: ENUM('PENDING', 'APPROVED', 'REJECTED', 'PAID')
+                  name: document_type
+                  type: VARCHAR(50)
                   constraints:
                     nullable: false
               - column:
-                  name: type
-                  type: ENUM('FACTURA', 'NOTA_CREDITO', 'NOTA_DEBITO')
+                  name: document_number
+                  type: VARCHAR(100)
                   constraints:
                     nullable: false
               - column:
-                  name: file_url
-                  type: VARCHAR(500)
-                  constraints:
-                    nullable: true
+                  name: receiver_tax_id
+                  type: VARCHAR(50)
+              - column:
+                  name: receiver_tax_id_without_check_digit
+                  type: VARCHAR(50)
+              - column:
+                  name: receiver_business_name
+                  type: VARCHAR(255)
+              - column:
+                  name: sender_tax_id
+                  type: VARCHAR(50)
+              - column:
+                  name: sender_tax_id_without_check_digit
+                  type: VARCHAR(50)
+              - column:
+                  name: sender_business_name
+                  type: VARCHAR(255)
+              - column:
+                  name: related_document_number
+                  type: VARCHAR(100)
+              - column:
+                  name: amount
+                  type: DECIMAL(15, 2)
+              - column:
+                  name: issue_date
+                  type: DATE
+              - column:
+                  name: due_date
+                  type: DATE
               - column:
                   name: created_date
                   type: TIMESTAMP
@@ -49,8 +74,18 @@ databaseChangeLog:
                   type: VARCHAR(255)
                   constraints:
                     nullable: true
+              - column:
+                  name: status
+                  type: ENUM('PENDING','APPROVED','REJECTED','PAID')
+                  constraints:
+                    nullable: false
+                  defaultValue: "PENDING"
+        - addUniqueConstraint:
+            tableName: invoices
+            columnNames: document_number
+            constraintName: uq_invoices_document_number
         - createTable:
-            tableName: invoice_metadata
+            tableName: invoice_items
             columns:
               - column:
                   name: id
@@ -63,82 +98,31 @@ databaseChangeLog:
                   name: invoice_id
                   type: BIGINT
                   constraints:
-                    foreignKeyName: fk_invoice_metadata_invoice
-                    references: invoices(id)
                     nullable: false
               - column:
-                  name: invoice_number
-                  type: VARCHAR(100)
-              - column:
-                  name: customer_name
-                  type: VARCHAR(255)
-              - column:
-                  name: customer_email
-                  type: VARCHAR(255)
-                  constraints:
-                    nullable: true
-              - column:
-                  name: customer_address
-                  type: TEXT
-              - column:
-                  name: supplier_name
-                  type: VARCHAR(255)
-              - column:
-                  name: supplier_email
-                  type: VARCHAR(255)
-              - column:
-                  name: supplier_address
-                  type: TEXT
-              - column:
-                  name: amount
-                  type: DECIMAL(15, 2)
-              - column:
-                  name: currency
-                  type: VARCHAR(10)
-              - column:
-                  name: tax_amount
-                  type: DECIMAL(15, 2)
-              - column:
-                  name: subtotal
-                  type: DECIMAL(15, 2)
-              - column:
-                  name: total_amount
-                  type: DECIMAL(15, 2)
-              - column:
-                  name: issue_date
-                  type: DATE
-                  constraints:
-                    nullable: false
-              - column:
-                  name: due_date
-                  type: DATE
-              - column:
-                  name: payment_terms
+                  name: item_code
                   type: VARCHAR(100)
               - column:
                   name: description
                   type: TEXT
               - column:
-                  name: notes
-                  type: TEXT
+                  name: quantity
+                  type: INT
               - column:
-                  name: pdf_url
-                  type: VARCHAR(500)
-              - column:
-                  name: original_filename
-                  type: VARCHAR(255)
-              - column:
-                  name: file_size
-                  type: BIGINT
-              - column:
-                  name: extracted_data
-                  type: TEXT
-              - column:
-                  name: confidence_score
-                  type: DECIMAL(5, 4)
-              - column:
-                  name: processing_status
+                  name: unit
                   type: VARCHAR(50)
+              - column:
+                  name: unit_price
+                  type: DECIMAL(15, 2)
+              - column:
+                  name: subtotal
+                  type: DECIMAL(15, 2)
+              - column:
+                  name: tax_amount
+                  type: DECIMAL(15, 2)
+              - column:
+                  name: total
+                  type: DECIMAL(15, 2)
               - column:
                   name: created_date
                   type: TIMESTAMP
@@ -159,3 +143,11 @@ databaseChangeLog:
                   type: VARCHAR(255)
                   constraints:
                     nullable: true
+        - addForeignKeyConstraint:
+            baseTableName: invoice_items
+            baseColumnNames: invoice_id
+            referencedTableName: invoices
+            referencedColumnNames: id
+            constraintName: fk_invoice_items_invoice
+            onDelete: CASCADE
+            onUpdate: RESTRICT
