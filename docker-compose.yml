@@ -15,6 +15,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
     networks:
       - app_network
     healthcheck:
@@ -84,6 +85,28 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    networks:
+      - app_network
+
+  mapping-service:
+    build:
+      context: ./invoicextract-mapping-service
+      dockerfile: Dockerfile
+    container_name: invoicextract-mapping-service
+    ports:
+      - "8082:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      # Primary datasource (Mappings DB)
+      MAPPINGS_DB_URL: jdbc:mysql://mysql:3306/mappings
+      MAPPINGS_DB_USER: root
+      MAPPINGS_DB_PASS: root
+      # Invoices DB (read-only access)
+      INVOICES_DB_URL: jdbc:mysql://mysql:3306/invoices
+      INVOICES_DB_USER: root
+      INVOICES_DB_PASS: root
     networks:
       - app_network
 

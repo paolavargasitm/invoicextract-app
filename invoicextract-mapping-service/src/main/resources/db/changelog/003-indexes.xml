@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+  <changeSet id="003-indexes" author="andrea">
+    <createIndex tableName="field_mappings" indexName="idx_field_mappings_erp_status">
+      <column name="erp_id"/>
+      <column name="status"/>
+    </createIndex>
+    <createIndex tableName="field_mappings" indexName="idx_field_mappings_erp_source">
+      <column name="erp_id"/>
+      <column name="source_field"/>
+    </createIndex>
+  </changeSet>
+</databaseChangeLog>

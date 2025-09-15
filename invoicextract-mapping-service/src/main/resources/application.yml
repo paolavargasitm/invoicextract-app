@@ -1,0 +1,39 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: invoicextract-mapping-service
+  datasource:
+    url: ${MAPPINGS_DB_URL:jdbc:mysql://localhost:3308/mappings}
+    username: ${MAPPINGS_DB_USER:mappings}
+    password: ${MAPPINGS_DB_PASS:mappings}
+    driverClassName: com.mysql.cj.jdbc.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+# Invoices DB (para uso futuro con JDBC/JPA read-only)
+invoicesdb:
+  url: ${INVOICES_DB_URL:jdbc:mysql://localhost:3307/invoices}
+  username: ${INVOICES_DB_USER:invoices}
+  password: ${INVOICES_DB_PASS:invoices}
+
+liquibase:
+  enabled: true
+  change-log: classpath:db/changelog/db.changelog-master.xml
+  url: ${MAPPINGS_DB_URL:jdbc:mysql://localhost:3308/mappings}
+  user: ${MAPPINGS_DB_USER:mappings}
+  password: ${MAPPINGS_DB_PASS:mappings}
+  driver-class-name: com.mysql.cj.jdbc.Driver
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
