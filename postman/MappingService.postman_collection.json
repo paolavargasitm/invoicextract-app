@@ -1,0 +1,233 @@
+{
+  "info": {
+    "_postman_id": "7ad4c0ac-5e09-47bd-9cf3-7b6c8f9b2a11",
+    "name": "InvoiceExtract - Mapping Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for Mapping Service endpoints (ERPs and Field Mappings)."
+  },
+  "item": [
+    {
+      "name": "ERPs",
+      "item": [
+        {
+          "name": "Create ERP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/erps",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "erps"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"SAP\"\n}"
+            },
+            "description": "Creates a new ERP with status ACTIVE by default."
+          },
+          "response": []
+        },
+        {
+          "name": "List ERPs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/erps",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "erps"]
+            },
+            "description": "Returns all ERPs."
+          },
+          "response": []
+        },
+        {
+          "name": "Change ERP Status",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/erps/:id/status?status=INACTIVE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "erps", ":id", "status"],
+              "query": [
+                { "key": "status", "value": "INACTIVE" }
+              ],
+              "variable": [
+                { "key": "id", "value": "1" }
+              ]
+            },
+            "description": "Changes the status of an ERP to the provided value (e.g., ACTIVE/INACTIVE)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Field Mappings",
+      "item": [
+        {
+          "name": "Create Mapping",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/mappings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mappings"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"erpName\": \"SAP\",\n  \"sourceField\": \"documentNumber\",\n  \"targetField\": \"docNumber\",\n  \"transformFn\": \"UPPERCASE\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "description": "Creates a field mapping for a given ERP by name."
+          },
+          "response": []
+        },
+        {
+          "name": "List Mappings by ERP (and status)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/mappings?erp=SAP&status=ACTIVE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mappings"],
+              "query": [
+                { "key": "erp", "value": "SAP" },
+                { "key": "status", "value": "ACTIVE" }
+              ]
+            },
+            "description": "Lists mappings filtered by ERP name and optional status (default ACTIVE)."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Mapping",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/mappings/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mappings", ":id"],
+              "variable": [
+                { "key": "id", "value": "1" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceField\": \"documentNumber\",\n  \"targetField\": \"documentNumber\",\n  \"transformFn\": \"LOWERCASE\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "description": "Updates fields of an existing mapping by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Change Mapping Status",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/mappings/:id/status?status=INACTIVE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mappings", ":id", "status"],
+              "query": [
+                { "key": "status", "value": "INACTIVE" }
+              ],
+              "variable": [
+                { "key": "id", "value": "1" }
+              ]
+            },
+            "description": "Changes the status of a mapping to the provided value (e.g., ACTIVE/INACTIVE)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Export",
+      "item": [
+        {
+          "name": "Export JSON (nested items)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/export?erp=SAP&format=json",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "export"],
+              "query": [
+                { "key": "erp", "value": "SAP" },
+                { "key": "format", "value": "json" }
+              ]
+            },
+            "description": "Exports mapped invoices as JSON with items nested (canonical field names)."
+          },
+          "response": []
+        },
+        {
+          "name": "Export JSON (flatten items)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/export?erp=SAP&format=json&flatten=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "export"],
+              "query": [
+                { "key": "erp", "value": "SAP" },
+                { "key": "format", "value": "json" },
+                { "key": "flatten", "value": "true" }
+              ]
+            },
+            "description": "Exports mapped invoices as JSON with flattened item keys (e.g., items[0].itemCode)."
+          },
+          "response": []
+        },
+        {
+          "name": "Export CSV (nested)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/export?erp=SAP&format=csv",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "export"],
+              "query": [
+                { "key": "erp", "value": "SAP" },
+                { "key": "format", "value": "csv" }
+              ]
+            },
+            "description": "Exports mapped invoices as CSV (items serialized as JSON string in a column)."
+          },
+          "response": []
+        },
+        {
+          "name": "Export CSV (flatten)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/export?erp=SAP&format=csv&flatten=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "export"],
+              "query": [
+                { "key": "erp", "value": "SAP" },
+                { "key": "format", "value": "csv" },
+                { "key": "flatten", "value": "true" }
+              ]
+            },
+            "description": "Exports mapped invoices as CSV with flattened item columns."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8082",
+      "type": "string"
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+databaseChangeLog:
+  - changeSet:
+      id: "create-invoices-and-items-tables"
+      author: "system"
+      comment: "Create tables to persist the invoice JSON structure in a normalized way"
+      changes:
+        - createTable:
+            tableName: invoices
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: document_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: document_number
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: receiver_tax_id
+                  type: VARCHAR(50)
+              - column:
+                  name: receiver_tax_id_without_check_digit
+                  type: VARCHAR(50)
+              - column:
+                  name: receiver_business_name
+                  type: VARCHAR(255)
+              - column:
+                  name: sender_tax_id
+                  type: VARCHAR(50)
+              - column:
+                  name: sender_tax_id_without_check_digit
+                  type: VARCHAR(50)
+              - column:
+                  name: sender_business_name
+                  type: VARCHAR(255)
+              - column:
+                  name: related_document_number
+                  type: VARCHAR(100)
+              - column:
+                  name: amount
+                  type: DECIMAL(15, 2)
+              - column:
+                  name: issue_date
+                  type: DATE
+              - column:
+                  name: due_date
+                  type: DATE
+              - column:
+                  name: created_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: modified_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: modified_by
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: status
+                  type: ENUM('PENDING','APPROVED','REJECTED','PAID')
+                  constraints:
+                    nullable: false
+                  defaultValue: "PENDING"
+        - addUniqueConstraint:
+            tableName: invoices
+            columnNames: document_number
+            constraintName: uq_invoices_document_number
+        - createTable:
+            tableName: invoice_items
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: invoice_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: item_code
+                  type: VARCHAR(100)
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: quantity
+                  type: INT
+              - column:
+                  name: unit
+                  type: VARCHAR(50)
+              - column:
+                  name: unit_price
+                  type: DECIMAL(15, 2)
+              - column:
+                  name: subtotal
+                  type: DECIMAL(15, 2)
+              - column:
+                  name: tax_amount
+                  type: DECIMAL(15, 2)
+              - column:
+                  name: total
+                  type: DECIMAL(15, 2)
+              - column:
+                  name: created_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: modified_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: modified_by
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseTableName: invoice_items
+            baseColumnNames: invoice_id
+            referencedTableName: invoices
+            referencedColumnNames: id
+            constraintName: fk_invoice_items_invoice
+            onDelete: CASCADE
+            onUpdate: RESTRICT

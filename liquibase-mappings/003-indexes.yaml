@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-indexes
+      author: andrea
+      changes:
+        - createIndex:
+            tableName: field_mappings
+            indexName: idx_field_mappings_erp_status
+            columns:
+              - column:
+                  name: erp_id
+              - column:
+                  name: status
+        - createIndex:
+            tableName: field_mappings
+            indexName: idx_field_mappings_erp_source
+            columns:
+              - column:
+                  name: erp_id
+              - column:
+                  name: source_field

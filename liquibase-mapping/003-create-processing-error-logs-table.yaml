@@ -1,0 +1,52 @@
+databaseChangeLog:
+  - changeSet:
+      id: "create-processing-error-logs-table"
+      author: "system"
+      comment: "Initial creation of processing_error_logs table matching ProcessingErrorLog entity"
+      changes:
+        - createTable:
+            tableName: processing_error_logs
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: topic
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: kafka_partition
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: kafka_offset
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: raw_message
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: error_type
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: error_message
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false

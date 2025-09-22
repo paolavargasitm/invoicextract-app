@@ -5,6 +5,45 @@ networks:
     driver: bridge
 
 services:
+  keycloak-db:
+    image: postgres:15
+    container_name: keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: keycloak
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      # Opcional: hostname para enlaces / tokens (ajústalo si usas reverse-proxy)
+      # KC_HOSTNAME: localhost
+      # Para emails corporativos (SMTP) más adelante:
+      # KC_MAIL_HOST: smtp.tuempresa.com
+    command: ["start-dev", "--http-port=8080"]
+    ports:
+      - "8085:8080"
+    networks:
+      - app_network
   mysql:
     image: mysql:8
     container_name: mysql
@@ -23,6 +62,23 @@ services:
       timeout: 20s
       retries: 10
 
+  mysql-mappings:
+    image: mysql:8
+    container_name: mysql-mappings
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mappings
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-mappings-data:/var/lib/mysql
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
   adminer:
     image: adminer
     container_name: adminer
@@ -30,6 +86,7 @@ services:
       - "8081:8080"
     depends_on:
       - mysql
+      - mysql-mappings
     networks:
       - app_network
 
@@ -42,6 +99,22 @@ services:
         condition: service_healthy
     environment:
       LIQUIBASE_COMMAND_URL: jdbc:mysql://mysql:3306/invoices?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      LIQUIBASE_COMMAND_USERNAME: root
+      LIQUIBASE_COMMAND_PASSWORD: root
+    networks:
+      - app_network
+
+  liquibase-mappings:
+    build:
+      context: .
+      dockerfile: Dockerfile.liquibase.mappings
+    depends_on:
+      mysql-mappings:
+        condition: service_healthy
+    environment:
+      # Ensure DB is created automatically if missing during development
+      # (safe for local dev; for prod prefer pre-provisioning)
+      LIQUIBASE_COMMAND_URL: jdbc:mysql://mysql-mappings:3306/mappings?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       LIQUIBASE_COMMAND_USERNAME: root
       LIQUIBASE_COMMAND_PASSWORD: root
     networks:
@@ -98,9 +171,13 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      mysql-mappings:
+        condition: service_healthy
+      liquibase-mappings:
+        condition: service_completed_successfully
     environment:
       # Primary datasource (Mappings DB)
-      MAPPINGS_DB_URL: jdbc:mysql://mysql:3306/mappings
+      MAPPINGS_DB_URL: jdbc:mysql://mysql-mappings:3306/mappings
       MAPPINGS_DB_USER: root
       MAPPINGS_DB_PASS: root
       # Invoices DB (read-only access)
@@ -112,3 +189,5 @@ services:
 
 volumes:
   mysql-data:
+  mysql-mappings-data:
+  keycloak-db-data:

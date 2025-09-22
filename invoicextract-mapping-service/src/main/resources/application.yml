@@ -1,13 +1,15 @@
 server:
   port: 8080
+  servlet:
+    context-path: /invoice-mapping
 
 spring:
   application:
     name: invoicextract-mapping-service
   datasource:
-    url: ${MAPPINGS_DB_URL:jdbc:mysql://localhost:3308/mappings}
-    username: ${MAPPINGS_DB_USER:mappings}
-    password: ${MAPPINGS_DB_PASS:mappings}
+    jdbc-url: ${MAPPINGS_DB_URL:jdbc:mysql://mysql-mappings:3306/mappings}
+    username: ${MAPPINGS_DB_USER:root}
+    password: ${MAPPINGS_DB_PASS:root}
     driverClassName: com.mysql.cj.jdbc.Driver
   jpa:
     open-in-view: false
@@ -16,21 +18,18 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.MySQLDialect
+  liquibase:
+    enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
 
 # Invoices DB (para uso futuro con JDBC/JPA read-only)
 invoicesdb:
-  url: ${INVOICES_DB_URL:jdbc:mysql://localhost:3307/invoices}
-  username: ${INVOICES_DB_USER:invoices}
-  password: ${INVOICES_DB_PASS:invoices}
-
-liquibase:
-  enabled: true
-  change-log: classpath:db/changelog/db.changelog-master.xml
-  url: ${MAPPINGS_DB_URL:jdbc:mysql://localhost:3308/mappings}
-  user: ${MAPPINGS_DB_USER:mappings}
-  password: ${MAPPINGS_DB_PASS:mappings}
-  driver-class-name: com.mysql.cj.jdbc.Driver
+  url: ${INVOICES_DB_URL:jdbc:mysql://mysql:3306/invoices}
+  username: ${INVOICES_DB_USER:root}
+  password: ${INVOICES_DB_PASS:root}
 
 springdoc:
   api-docs:
