@@ -4,6 +4,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +28,10 @@ public class Invoice {
     private LocalDate issueDate;
     private LocalDate dueDate;
     private String status; // PENDING, APPROVED, REJECTED, PAID
+    private LocalDateTime createdDate;
+    private LocalDateTime modifiedDate;
+    private String createdBy;
+    private String modifiedBy;
     @Builder.Default
     private List<InvoiceItem> items = new ArrayList<>();
 }

@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-init-mapping
+      author: andrea
+      changes:
+        - createTable:
+            tableName: mapping_rule
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: source_key
+                  type: VARCHAR(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_key
+                  type: VARCHAR(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transform
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addUniqueConstraint:
+            tableName: mapping_rule
+            columnNames: source_key,target_key
+            constraintName: uq_mapping_unique_pair

@@ -1,0 +1,5 @@
+databaseChangeLog:
+  - include:
+      file: changelog/changes/001-init-customers.yaml
+  - include:
+      file: changelog/changes/002-init-invoices.yaml

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -99,7 +100,7 @@ public class FetchInvoicesUseCase {
         
         if (stats.getTotalCount() > 0) {
             stats.setAverageAmount(stats.getTotalAmount().divide(
-                BigDecimal.valueOf(stats.getTotalCount()), 2, BigDecimal.ROUND_HALF_UP));
+                BigDecimal.valueOf(stats.getTotalCount()), 2, RoundingMode.HALF_UP));
         } else {
             stats.setAverageAmount(BigDecimal.ZERO);
         }

@@ -39,9 +39,16 @@ services:
       # KC_HOSTNAME: localhost
       # Para emails corporativos (SMTP) más adelante:
       # KC_MAIL_HOST: smtp.tuempresa.com
-    command: ["start-dev", "--http-port=8080"]
+    command: ["start-dev", "--http-port=8080","--spi-theme-static-max-age=-1","--spi-theme-cache-themes=false","--spi-theme-cache-templates=false"]
     ports:
       - "8085:8080"
+    volumes:
+      - ./keycloak/themes/invoicextract:/opt/keycloak/themes/invoicextract:ro
+    healthcheck:
+      test: ["CMD", "bash", "-c", "curl -fsS http://localhost:8085/realms/master/.well-known/openid-configuration > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - app_network
   mysql:
@@ -180,10 +187,26 @@ services:
       MAPPINGS_DB_URL: jdbc:mysql://mysql-mappings:3306/mappings
       MAPPINGS_DB_USER: root
       MAPPINGS_DB_PASS: root
-      # Invoices DB (read-only access)
       INVOICES_DB_URL: jdbc:mysql://mysql:3306/invoices
       INVOICES_DB_USER: root
       INVOICES_DB_PASS: root
+    networks:
+      - app_network
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_KEYCLOAK_URL: "http://localhost:8085"
+        VITE_KEYCLOAK_REALM: "invoicextract"
+        VITE_KEYCLOAK_CLIENT_ID: "invoices-frontend"
+        VITE_BACKEND_BASE_URL: "http://localhost:8080/invoicextract"
+        VITE_MAPPINGS_BASE_URL: "http://localhost:8082/invoice-mapping"
+    container_name: invoicextract-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - keycloak
     networks:
       - app_network
 

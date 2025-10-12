@@ -36,6 +36,14 @@ spring:
     enabled: false
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Use JWKS endpoint to validate tokens regardless of issuer hostname
+          jwk-set-uri: http://keycloak:8080/realms/invoicextract/protocol/openid-connect/certs
+          # issuer-uri: http://keycloak:8080/realms/invoicextract
+
 server:
   servlet:
     context-path: /invoicextract

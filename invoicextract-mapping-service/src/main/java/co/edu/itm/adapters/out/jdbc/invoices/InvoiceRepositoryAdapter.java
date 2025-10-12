@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.RowMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -41,6 +42,10 @@ public class InvoiceRepositoryAdapter implements InvoiceRepositoryPort {
                     .issueDate(rs.getObject("issue_date", LocalDate.class))
                     .dueDate(rs.getObject("due_date", LocalDate.class))
                     .status(rs.getString("status"))
+                    .createdDate(rs.getObject("created_date", LocalDateTime.class))
+                    .modifiedDate(rs.getObject("modified_date", LocalDateTime.class))
+                    .createdBy(rs.getString("created_by"))
+                    .modifiedBy(rs.getString("modified_by"))
                     .build();
         }
     };
@@ -66,7 +71,7 @@ public class InvoiceRepositoryAdapter implements InvoiceRepositoryPort {
     public List<Invoice> findApproved() {
         String sql = "SELECT id, document_type, document_number, receiver_tax_id, receiver_tax_id_without_check_digit, " +
                 "receiver_business_name, sender_tax_id, sender_tax_id_without_check_digit, sender_business_name, " +
-                "related_document_number, amount, issue_date, due_date, status FROM invoices WHERE status = 'APPROVED'";
+                "related_document_number, amount, issue_date, due_date, status, created_date, modified_date, created_by, modified_by FROM invoices WHERE status = 'APPROVED'";
         List<Invoice> invoices = jdbc.query(sql, INVOICE_MAPPER);
 
         if (invoices.isEmpty()) return invoices;

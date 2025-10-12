@@ -47,6 +47,11 @@ public class ExportInvoicesUseCase {
             src.put("issueDate", inv.getIssueDate());
             src.put("dueDate", inv.getDueDate());
             src.put("status", inv.getStatus());
+            // Audit fields
+            src.put("createdDate", inv.getCreatedDate());
+            src.put("modifiedDate", inv.getModifiedDate());
+            src.put("createdBy", inv.getCreatedBy());
+            src.put("modifiedBy", inv.getModifiedBy());
 
             // Items: nested JSON by default; flattened if requested
             if (flatten) {

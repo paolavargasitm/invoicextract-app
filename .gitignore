@@ -22,3 +22,57 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# ==============================
+# Frontend (Node/JS) artifacts
+# ==============================
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.cache/
+frontend/.next/
+frontend/.nuxt/
+frontend/.parcel-cache/
+frontend/.vite/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/.env
+frontend/.env.*
+
+# ==============================
+# Java/Maven artifacts
+# ==============================
+**/target/
+**/surefire-reports/
+**/failsafe-reports/
+**/site/
+**/jacoco.exec
+
+# ==============================
+# IDE / tooling
+# ==============================
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# ==============================
+# Sonar / Analysis
+# ==============================
+**/.scannerwork/
+
+# ==============================
+# OS junk
+# ==============================
+.DS_Store
+Thumbs.db
+
+# ==============================
+# Docker / misc
+# ==============================
+.env
+*.pid

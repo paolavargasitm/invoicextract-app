@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "tables": {
+    "invoices": {
+      "name": "Invoice",
+      "primaryKey": "id",
+      "fields": [
+        { "name": "id", "type": "Long", "nullable": false },
+        { "name": "documentType", "type": "String", "nullable": false },
+        { "name": "documentNumber", "type": "String", "nullable": false },
+        { "name": "receiverTaxId", "type": "String", "nullable": true },
+        { "name": "receiverTaxIdWithoutCheckDigit", "type": "String", "nullable": true },
+        { "name": "receiverBusinessName", "type": "String", "nullable": true },
+        { "name": "senderTaxId", "type": "String", "nullable": true },
+        { "name": "senderTaxIdWithoutCheckDigit", "type": "String", "nullable": true },
+        { "name": "senderBusinessName", "type": "String", "nullable": true },
+        { "name": "relatedDocumentNumber", "type": "String", "nullable": true },
+        { "name": "amount", "type": "BigDecimal", "nullable": true },
+        { "name": "issueDate", "type": "LocalDate", "nullable": true },
+        { "name": "dueDate", "type": "LocalDate", "nullable": true },
+        { "name": "status", "type": "InvoiceStatus", "nullable": false, "enum": ["PENDING","APPROVED","REJECTED","PAID"] },
+        { "name": "createdDate", "type": "LocalDateTime", "nullable": true },
+        { "name": "modifiedDate", "type": "LocalDateTime", "nullable": true },
+        { "name": "createdBy", "type": "String", "nullable": true },
+        { "name": "modifiedBy", "type": "String", "nullable": true }
+      ]
+    },
+    "invoiceItems": {
+      "name": "InvoiceItem",
+      "primaryKey": "id",
+      "foreignKeys": [
+        { "field": "invoice", "references": "Invoice(id)" }
+      ],
+      "fields": [
+        { "name": "id", "type": "Long", "nullable": false },
+        { "name": "invoice", "type": "Invoice", "nullable": false },
+        { "name": "itemCode", "type": "String", "nullable": true },
+        { "name": "description", "type": "String", "nullable": true },
+        { "name": "quantity", "type": "Integer", "nullable": true },
+        { "name": "unit", "type": "String", "nullable": true },
+        { "name": "unitPrice", "type": "BigDecimal", "nullable": true },
+        { "name": "subtotal", "type": "BigDecimal", "nullable": true },
+        { "name": "taxAmount", "type": "BigDecimal", "nullable": true },
+        { "name": "total", "type": "BigDecimal", "nullable": true },
+        { "name": "createdDate", "type": "LocalDateTime", "nullable": true },
+        { "name": "modifiedDate", "type": "LocalDateTime", "nullable": true },
+        { "name": "createdBy", "type": "String", "nullable": true },
+        { "name": "modifiedBy", "type": "String", "nullable": true }
+      ]
+    }
+  },
+  "shortcuts": {
+    "invoiceFields": [
+      "id",
+      "documentType",
+      "documentNumber",
+      "receiverTaxId",
+      "receiverTaxIdWithoutCheckDigit",
+      "receiverBusinessName",
+      "senderTaxId",
+      "senderTaxIdWithoutCheckDigit",
+      "senderBusinessName",
+      "relatedDocumentNumber",
+      "amount",
+      "issueDate",
+      "dueDate",
+      "status",
+      "createdDate",
+      "modifiedDate",
+      "createdBy",
+      "modifiedBy"
+    ],
+    "itemFields": [
+      "itemCode",
+      "description",
+      "quantity",
+      "unit",
+      "unitPrice",
+      "subtotal",
+      "taxAmount",
+      "total",
+      "createdDate",
+      "modifiedDate",
+      "createdBy",
+      "modifiedBy"
+    ]
+  }
+}

@@ -21,6 +21,13 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
   liquibase:
     enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Use JWKS endpoint to validate tokens regardless of issuer hostname
+          jwk-set-uri: http://keycloak:8080/realms/invoicextract/protocol/openid-connect/certs
+          # issuer-uri: http://keycloak:8080/realms/invoicextract
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration

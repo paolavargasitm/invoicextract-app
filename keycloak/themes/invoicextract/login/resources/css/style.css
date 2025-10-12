@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+:root { --brand-primary: #3366ff; --brand-bg: #f5f7fb; }
+
+body, .login-pf body {
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--brand-bg) !important;
+}
+
+#kc-header, .kc-logo-text { display: none; }
+
+#kc-page-title { display: none; }
+
+/* Center card, white, rounded, soft shadow */
+#kc-content .card-pf {
+  background: #ffffff !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 32px rgba(31, 45, 61, 0.15) !important;
+  overflow: hidden;
+  padding: 28px 28px 24px 28px;
+}
+
+#kc-content { display: flex; align-items: center; justify-content: center; }
+.login-pf-page { padding-top: 6vh !important; }
+
+/* Title */
+#kc-page-title, .kc-form-title {
+  display: block !important;
+  text-align: center;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 18px;
+}
+
+/* Primary button */
+#kc-form-login .btn-primary {
+  background: var(--brand-primary) !important;
+  border-color: var(--brand-primary) !important;
+  height: 44px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+#kc-form-login .btn-primary:hover { 
+  filter: brightness(0.95);
+}
+
+/* Inputs */
+#kc-form-login input.form-control {
+  height: 44px;
+  border-radius: 10px;
+  border-color: #e5e7eb;
+}
+
+#kc-login { height: 44px; border-radius: 10px; }
+
+.kc-logo-text { display: block !important; font-weight: 800; font-size: 24px; color: #0f172a; margin-bottom: 8px; }
+.kc-logo-text::after { content: "logo"; }
+
+
+/* Ensure header is visible and shows InvoicExtract when .kc-logo-text is absent */
+#kc-header { display: block !important; text-align: center; margin-bottom: 8px; }
+#kc-header::after { content: "InvoicExtract"; font-weight: 800; font-size: 24px; color: #0f172a; }
+
+/* Optional: logo container (if you add it via template override) */
+.kc-custom-logo {
+  width: 120px; height: 120px; margin: 0 auto 12px auto; display: block;
+  background: url('logo.svg') center/contain no-repeat;
+}
+
+/* Links */
+.login-pf-page a { color: var(--brand-primary) !important; font-weight: 500; }
+
+
+/* 1) Oculta el texto original y evita duplicados */
+.kc-logo-text { display: none !important; }        /* no usamos .kc-logo-text */
+#kc-header::after { content: none !important; }     /* sin texto extra en header */
+
+/* 2) Muestra el logo simulando .kc-custom-logo sobre el header */
+#kc-header { display: block !important; text-align: center; margin-bottom: 8px; }
+#kc-header::before {
+  content: "";
+  display: block;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 12px auto;
+  background: url('../img/logo.svg') center/contain no-repeat; /* ruta correcta */
+}
+
+/* 3) Título principal del formulario */
+#kc-page-title { display: block !important; font-size: 0 !important; }
+#kc-page-title::after {
+  content: "Bienvenid@";
+  font-size: 20px;
+  font-weight: 700;
+  color: #334155;
+}
