@@ -17,11 +17,6 @@ variable "vpc_id" {
   type = string
 }
 
-variable "subnet_id" {
-  type = string
-  # place RDS in this subnet (Single-AZ)
-}
-
 variable "allowed_cidr" {
   type = string
   # e.g., "YOUR_IP/32" for dev
@@ -30,4 +25,9 @@ variable "allowed_cidr" {
 variable "engine_version" {
   type    = string
   default = "8.0.36"
+}
+
+variable "subnet_ids" {
+  type = list(string)
+  description = "List of subnet IDs covering at least two AZs"
 }
