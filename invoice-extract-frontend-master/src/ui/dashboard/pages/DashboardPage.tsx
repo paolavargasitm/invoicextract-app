@@ -16,6 +16,10 @@ export default function DashboardPage() {
   const [userOrEmail, setUserOrEmail] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  // Invoices state
+  const [rows, setRows] = useState<InvoiceRow[]>([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
+  const [errorInvoices, setErrorInvoices] = useState("");
   // Export modal state
   const [showExport, setShowExport] = useState(false);
   const [erp, setErp] = useState("SAP");
@@ -27,23 +31,51 @@ export default function DashboardPage() {
   const [showDetail, setShowDetail] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
 
-  // Datos mock para UI inicial (luego se conecta a API)
-  const data: InvoiceRow[] = useMemo(
-    () => [
-      { id: "FCT-001", date: "2025-04-21", provider: "Grupo Éxito", amount: 1200000, status: "Aprobada" },
-      { id: "FCT-002", date: "2025-04-21", provider: "Alkosto", amount: 650000, status: "Rechazada" },
-      { id: "FCT-003", date: "2025-04-20", provider: "Falabella", amount: 950000, status: "Pendiente" },
-    ],
-    []
-  );
+  const backendBase = () => (import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:8080/invoicextract");
+  // Load invoices from API (fallback-friendly mapping)
+  const mapStatus = (s: any): InvoiceRow["status"] => {
+    if (!s) return "Pendiente";
+    const t = String(s).toUpperCase();
+    if (t.includes("APPROVED") || t.includes("APROB")) return "Aprobada";
+    if (t.includes("REJECT")) return "Rechazada";
+    return "Pendiente";
+  };
+  const toRow = (inv: any): InvoiceRow => {
+    const id = inv?.id || inv?.invoiceNumber || inv?.code || inv?.uuid || "—";
+    const dateRaw = inv?.date || inv?.issueDate || inv?.createdDate || new Date().toISOString();
+    const date = String(dateRaw).slice(0, 10);
+    const provider = inv?.provider || inv?.providerBusinessName || inv?.senderBusinessName || inv?.supplierName || "—";
+    const amountNum = Number(inv?.amount ?? inv?.total ?? inv?.totalAmount ?? inv?.grandTotal ?? 0);
+    return { id: String(id), date, provider: String(provider), amount: isNaN(amountNum) ? 0 : amountNum, status: mapStatus(inv?.status) };
+  };
+  const loadInvoices = async () => {
+    setLoadingInvoices(true); setErrorInvoices("");
+    try {
+      const qs = new URLSearchParams();
+      if (userOrEmail.trim()) qs.set("user", userOrEmail.trim());
+      if (from) qs.set("from", from);
+      if (to) qs.set("to", to);
+      const url = `${backendBase()}/api/invoices${qs.toString() ? `?${qs}` : ''}`;
+      const res = await fetch(url, { headers: { ...authHeader() } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []);
+      setRows(list.map(toRow));
+    } catch (e: any) {
+      setErrorInvoices(e?.message || 'No se pudieron cargar las facturas');
+      setRows([]);
+    } finally { setLoadingInvoices(false); }
+  };
+
+  useEffect(() => { loadInvoices(); /* eslint-disable-next-line */ }, []);
 
   const stats = useMemo(() => {
-    const total = data.length;
-    const aprobadas = data.filter(d => d.status === "Aprobada").length;
-    const rechazadas = data.filter(d => d.status === "Rechazada").length;
-    const monto = data.reduce((acc, d) => acc + d.amount, 0);
+    const total = rows.length;
+    const aprobadas = rows.filter(d => d.status === "Aprobada").length;
+    const rechazadas = rows.filter(d => d.status === "Rechazada").length;
+    const monto = rows.reduce((acc, d) => acc + d.amount, 0);
     return { total, aprobadas, rechazadas, monto };
-  }, [data]);
+  }, [rows]);
 
   const fmtCurrency = (n: number) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
 
@@ -58,10 +90,7 @@ export default function DashboardPage() {
     }}>{text}</span>
   );
 
-  const onSearch = () => {
-    // Aquí conectaremos con API aplicando filtros
-    console.info("Buscar", { userOrEmail, from, to });
-  };
+  const onSearch = () => { loadInvoices(); };
 
   const mappingsBase = () => (import.meta.env.VITE_MAPPINGS_BASE_URL || "http://localhost:8082/invoice-mapping");
 
@@ -71,8 +100,10 @@ export default function DashboardPage() {
         const res = await fetch(`${mappingsBase()}/api/erps`, { headers: { ...authHeader() } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        const list: string[] = Array.isArray(data) ? data : (data?.items || []);
-        if (list?.length) {
+        // Normalize to string list (some backends return objects: {id,name,status,...})
+        const raw = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []);
+        const list: string[] = raw.map((x: any) => typeof x === 'string' ? x : (x?.name ?? String(x?.id ?? 'SAP')));
+        if (list.length) {
           setErpOptions(list);
           if (!list.includes(erp)) setErp(list[0]);
         }
@@ -82,6 +113,14 @@ export default function DashboardPage() {
     };
     loadErps();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Open export modal if URL contains ?export=1
+  useEffect(() => {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('export') === '1') setShowExport(true);
+    } catch {}
   }, []);
 
   async function exportMappings() {
@@ -120,7 +159,7 @@ export default function DashboardPage() {
           <input placeholder="ID usuario / Correo" value={userOrEmail} onChange={e => setUserOrEmail(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
           <input type="date" value={from} onChange={e => setFrom(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
           <input type="date" value={to} onChange={e => setTo(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
-          <button onClick={() => setShowExport(true)} style={{ background: "#16a34a", color: "#fff", border: 0, borderRadius: 8, padding: "10px 12px" }}>Exportar data a ERP</button>
+          <button type="button" onClick={() => { console.debug('dashboard: open export modal'); setShowExport(true); }} style={{ background: "#16a34a", color: "#fff", border: 0, borderRadius: 8, padding: "10px 12px" }}>Exportar data a ERP</button>
           <button onClick={() => alert("Enviar a ERP (placeholder)")} style={{ background: "var(--brand)", color: "#fff", border: 0, borderRadius: 8, padding: "10px 12px" }}>Enviar a ERP (SAP)</button>
         </div>
         <div style={{ marginTop: 12 }}>
@@ -161,7 +200,13 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {data.map((row, idx) => (
+              {errorInvoices && (
+                <tr><td colSpan={6} style={{ color: '#991b1b', padding: 8, borderTop: `1px solid var(--border)` }}>{errorInvoices}</td></tr>
+              )}
+              {loadingInvoices && (
+                <tr><td colSpan={6} style={{ color: '#64748b', padding: 8, borderTop: `1px solid var(--border)` }}>Cargando…</td></tr>
+              )}
+              {!loadingInvoices && !errorInvoices && rows.map((row, idx) => (
                 <tr key={row.id} style={{ background: idx % 2 === 0 ? "#ffffff" : "#f9fafb" }}>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.id}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.date}</td>
@@ -177,6 +222,11 @@ export default function DashboardPage() {
                   </td>
                 </tr>
               ))}
+              {!loadingInvoices && !errorInvoices && rows.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{ color: '#64748b', padding: 8, borderTop: `1px solid var(--border)` }}>Sin resultados</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -222,8 +272,9 @@ export default function DashboardPage() {
  
 function Modal({ open, onClose, children }: { open: boolean, onClose: () => void, children: React.ReactNode }) {
   if (!open) return null;
+  console.debug('dashboard: export modal rendered');
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.5)', display: 'grid', placeItems: 'center', zIndex: 50 }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.5)', display: 'grid', placeItems: 'center', zIndex: 9999 }}>
       <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--border)', width: 'min(560px, 92vw)', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <h3 style={{ margin: 0 }}>Exportación de Mapeos</h3>

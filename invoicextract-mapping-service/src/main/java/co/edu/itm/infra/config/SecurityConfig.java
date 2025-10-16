@@ -44,7 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/configs/**").hasRole("ADMIN")
                 .requestMatchers("/api/invoices/**").hasAnyRole("FINANZAS", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/erps/**").hasAnyRole("FINANZAS", "TECNICO", "ADMIN")
-                .requestMatchers("/api/erps/**", "/api/mappings/**", "/api/reference/**").hasRole("TECNICO")
+                .requestMatchers("/api/erps/**", "/api/mappings/**", "/api/reference/**").hasAnyRole("TECNICO", "ADMIN")
                 .requestMatchers("/api/export/**").hasAnyRole("FINANZAS", "ADMIN")
 
                 // All remaining endpoints require authentication
@@ -62,7 +62,9 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
-                "http://127.0.0.1:3000"
+                "http://127.0.0.1:3000",
+                "http://localhost:3001",
+                "http://127.0.0.1:3001"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
