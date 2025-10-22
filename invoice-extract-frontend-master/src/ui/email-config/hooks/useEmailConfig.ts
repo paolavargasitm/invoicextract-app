@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
+import { http } from "../../../lib/http";
 
 export type EmailConfigData = {
     email: string;
@@ -14,6 +15,9 @@ export function useEmailConfig(opts?: { onValidate?: ValidateFn; onSave?: SaveFn
     const [password, setPassword] = useState<string>("");
     const [validationResult, setValidationResult] = useState<string>("");
     const [loading, setLoading] = useState<"idle" | "validating" | "saving">("idle");
+    const [activeUsername, setActiveUsername] = useState<string>("");
+    const [activeConfiguredAt, setActiveConfiguredAt] = useState<string>("");
+    const [successMessage, setSuccessMessage] = useState<string>("");
 
     const handleEmail = (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value);
     const handlePassword = (e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value);
@@ -52,12 +56,59 @@ export function useEmailConfig(opts?: { onValidate?: ValidateFn; onSave?: SaveFn
             if (opts?.onSave) {
                 await opts.onSave({ email, password });
             } else {
-                alert("Credenciales guardadas correctamente.");
+                // Guardar contra el backend protegido (mismo host de invoices)
+                const resp = await http("/api/config/email", {
+                    method: "POST",
+                    body: JSON.stringify({ username: email, password })
+                });
+                if (!resp.ok) {
+                    const txt = await resp.text();
+                    throw new Error(txt || "Error al guardar credenciales");
+                }
+                setSuccessMessage("Credenciales guardadas correctamente.");
+                // limpiar formulario
+                setEmail("");
+                setPassword("");
+                // refrescar correo activo
+                await fetchActiveEmail();
             }
         } finally {
             setLoading("idle");
         }
     };
+
+    const fetchActiveEmail = async () => {
+        try {
+            // 1) Obtener config activa desde el backend (mismo host de invoices)
+            const resp = await http("/api/config/email/active");
+            if (!resp.ok) return;
+            const data = await resp.json();
+            const username: string = data.username ?? "";
+            setActiveUsername(username);
+
+            // 2) Intentar obtener la fecha de configuración consultando el filtro por status ACTIVE
+            if (username) {
+                const listResp = await http(`/api/config/email/filter?username=${encodeURIComponent(username)}&status=ACTIVE`);
+                if (listResp.ok) {
+                    const list = await listResp.json();
+                    // buscar el más reciente por createdAt
+                    if (Array.isArray(list) && list.length > 0) {
+                        const sorted = [...list].sort((a, b) => new Date(b.createdAt || b.createdDate || 0).getTime() - new Date(a.createdAt || a.createdDate || 0).getTime());
+                        const top = sorted[0];
+                        const configuredAt: string = top.createdAt || top.createdDate || "";
+                        setActiveConfiguredAt(configuredAt);
+                    }
+                }
+            }
+        } catch {
+            // ignore errores de consulta
+        }
+    };
+
+    useEffect(() => {
+        // No auto-fetch; el usuario consultará manualmente
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return {
         email,
@@ -69,5 +120,9 @@ export function useEmailConfig(opts?: { onValidate?: ValidateFn; onSave?: SaveFn
         handlePassword,
         validarConexion,
         guardarCredenciales,
+        activeUsername,
+        activeConfiguredAt,
+        successMessage,
+        refreshActiveEmail: fetchActiveEmail,
     };
 }
