@@ -6,26 +6,30 @@ const EmailConfigPage: React.FC = () => {
     const {
         email,
         password,
-        validationResult,
         loading,
         isComplete,
         handleEmail,
         handlePassword,
-        validarConexion,
         guardarCredenciales,
+        activeUsername,
+        activeConfiguredAt,
+        successMessage,
+        refreshActiveEmail,
     } = useEmailConfig();
 
     return (
         <EmailConfigView
             email={email}
             password={password}
-            validationResult={validationResult}
             loading={loading}
             isComplete={isComplete}
             onEmailChange={handleEmail}
             onPasswordChange={handlePassword}
-            onValidateClick={validarConexion}
             onSaveClick={guardarCredenciales}
+            activeUsername={activeUsername}
+            activeConfiguredAt={activeConfiguredAt}
+            successMessage={successMessage}
+            onRefreshActive={refreshActiveEmail}
         />
     );
 };

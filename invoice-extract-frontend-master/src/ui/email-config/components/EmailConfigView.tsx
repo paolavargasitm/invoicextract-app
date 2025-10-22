@@ -4,25 +4,29 @@ import "../styles/EmailConfig.css";
 export type EmailConfigViewProps = {
     email: string;
     password: string;
-    validationResult: string;
     loading: "idle" | "validating" | "saving";
     isComplete: boolean;
     onEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onValidateClick: () => void;
     onSaveClick: () => void;
+    activeUsername: string;
+    activeConfiguredAt: string;
+    successMessage: string;
+    onRefreshActive: () => void;
 };
 
 const EmailConfigView: React.FC<EmailConfigViewProps> = ({
     email,
     password,
-    validationResult,
     loading,
     isComplete,
     onEmailChange,
     onPasswordChange,
-    onValidateClick,
     onSaveClick,
+    activeUsername,
+    activeConfiguredAt,
+    successMessage,
+    onRefreshActive,
 }) => {
     return (
         <div className="ec__container">
@@ -31,6 +35,8 @@ const EmailConfigView: React.FC<EmailConfigViewProps> = ({
                 Esta sección permite registrar las credenciales del correo que usará el proceso RPA.
                 Asegúrate de que los datos sean válidos y estén actualizados.
             </p>
+
+            {/* Se removió el resumen superior del correo activo */}
 
             <label className="ec__label" htmlFor="email">Correo electrónico</label>
             <input
@@ -56,19 +62,20 @@ const EmailConfigView: React.FC<EmailConfigViewProps> = ({
                 required
             />
 
-            <div className="ec__actions">
-                <button
-                    type="button"
-                    className="ec__btn ec__btn--validate"
-                    onClick={onValidateClick}
-                    disabled={loading === "validating" || !isComplete}
-                >
-                    {loading === "validating" ? "Validando..." : "Validar Conexión"}
-                </button>
-                <span className="ec__result" aria-live="polite">
-                    [{validationResult || "Resultado de validación aparecerá aquí"}]
-                </span>
-            </div>
+            {/* La validación no está disponible por ahora */}
+
+            {successMessage && (
+                <div className="ec__success" role="status" aria-live="polite" style={{
+                    marginTop: 8,
+                    padding: "8px 10px",
+                    borderRadius: 8,
+                    background: "#ecfdf5",
+                    color: "#065f46",
+                    border: "1px solid #a7f3d0"
+                }}>
+                    {successMessage}
+                </div>
+            )}
 
             <button
                 type="button"
@@ -78,6 +85,36 @@ const EmailConfigView: React.FC<EmailConfigViewProps> = ({
             >
                 {loading === "saving" ? "Guardando..." : "Guardar Credenciales"}
             </button>
+
+            <section style={{ marginTop: 16 }}>
+                <div style={{
+                    background: "#ffffff",
+                    border: "1px solid var(--border, #e5e7eb)",
+                    borderRadius: 12,
+                    padding: 16,
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                    display: "grid",
+                    gap: 8
+                }}>
+                    <h3 style={{ margin: 0, color: "#111827", fontSize: 16 }}>Correo activo</h3>
+                    <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", gap: 8, alignItems: "center" }}>
+                        <div style={{ color: "#6b7280", fontSize: 12 }}>Usuario</div>
+                        <div style={{ color: "#111827" }}>{activeUsername || "—"}</div>
+                        <div style={{ color: "#6b7280", fontSize: 12 }}>Configurado</div>
+                        <div style={{ color: "#111827" }}>{activeConfiguredAt ? new Date(activeConfiguredAt).toLocaleString() : "—"}</div>
+                    </div>
+                    <div style={{ marginTop: 8 }}>
+                        <button
+                            type="button"
+                            className="ec__btn ec__btn--validate"
+                            onClick={onRefreshActive}
+                            disabled={loading !== "idle"}
+                        >
+                            Consultar correo activo
+                        </button>
+                    </div>
+                </div>
+            </section>
         </div>
     );
 };
