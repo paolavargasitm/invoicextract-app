@@ -1,38 +1,39 @@
 import { useEffect, useState } from "react";
 import { erpsApi } from "../api/erpsApi";
+import ErrorBanner from "../../../components/ErrorBanner";
 
 type Theme = { card: string; border: string; text: string; muted: string; brand: string };
 
 export default function ErpsPanel({ theme }: { theme: Theme }) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<{ message: string; details?: any } | null>(null);
   const [name, setName] = useState("");
 
   const load = async () => {
-    setLoading(true); setError("");
+    setLoading(true); setError(null);
     try {
       const data = await erpsApi.list();
       setItems(data || []);
-    } catch (e: any) { setError(e.message || 'No se pudo obtener los ERPs'); }
+    } catch (e: any) { setError({ message: e?.message || 'No se pudo obtener los ERPs', details: e?.details }); }
     finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, []);
 
   const create = async (ev: React.FormEvent) => {
-    ev.preventDefault(); setError("");
+    ev.preventDefault(); setError(null);
     try {
       if (!name.trim()) throw new Error('Nombre requerido');
       await erpsApi.create({ name: name.trim() });
       setName('');
       await load();
-    } catch (e: any) { setError(e.message); }
+    } catch (e: any) { setError({ message: e?.message, details: e?.details }); }
   };
 
   const toggleStatus = async (row: any) => {
     const next = row.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-    try { await erpsApi.changeStatus(row.id, next); await load(); } catch (e: any) { setError(e.message); }
+    try { await erpsApi.changeStatus(row.id, next); await load(); } catch (e: any) { setError({ message: e?.message, details: e?.details }); }
   };
 
   const badge = (text: string, color: string) => (
@@ -48,7 +49,7 @@ export default function ErpsPanel({ theme }: { theme: Theme }) {
       </div>
 
       {error && (
-        <div style={{ background: '#fef2f2', color: '#991b1b', padding: 10, borderRadius: 8, marginBottom: 12 }}>{error}</div>
+        <ErrorBanner message={error.message} details={error.details} onClose={() => setError(null)} />
       )}
 
       <div style={{ overflow: 'auto', maxHeight: 460, border: `1px solid ${theme.border}`, borderRadius: 8 }}>
