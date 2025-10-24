@@ -1,4 +1,5 @@
 import { authHeader } from "../../../auth/keycloak";
+import { parseBody, toUserError } from "../../../utils/httpError";
 
 const BASE_URL = (import.meta.env.VITE_MAPPINGS_BASE_URL || 'http://localhost:8082/invoice-mapping');
 
@@ -11,13 +12,9 @@ async function request(path: string, options: RequestInit = {}) {
   } as any;
   const res = await fetch(url, { ...options, headers });
   const text = await res.text();
-  let body: any = null;
-  try { body = text ? JSON.parse(text) : null; } catch { body = text; }
+  const body: any = parseBody(text);
   if (!res.ok) {
-    const message = body?.error?.message || text || `HTTP ${res.status}`;
-    const code = body?.error?.code || res.status;
-    const err: any = new Error(message);
-    err.status = res.status; err.code = code; err.body = body; throw err;
+    throw toUserError(res, body);
   }
   return body;
 }

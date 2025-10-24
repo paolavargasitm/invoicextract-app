@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { authHeader } from "../../../auth/keycloak";
 import InvoiceDetailView from "../../invoices/components/InvoiceDetailView";
 import { useInvoiceDetail } from "../../invoices/hooks/useInvoiceDetail";
+import ErrorBanner from "../../../components/ErrorBanner";
 
 type InvoiceRow = {
   id: string;
@@ -19,13 +20,13 @@ export default function DashboardPage() {
   // Invoices state
   const [rows, setRows] = useState<InvoiceRow[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
-  const [errorInvoices, setErrorInvoices] = useState("");
+  const [errorInvoices, setErrorInvoices] = useState<string>("");
   // Export modal state
   const [showExport, setShowExport] = useState(false);
   const [erp, setErp] = useState("SAP");
   const [format, setFormat] = useState<"CSV" | "JSON">("CSV");
   const [loadingExport, setLoadingExport] = useState(false);
-  const [errorExport, setErrorExport] = useState("");
+  const [errorExport, setErrorExport] = useState<string>("");
   const [erpOptions, setErpOptions] = useState<string[]>(["SAP"]);
   // Detail modal state
   const [showDetail, setShowDetail] = useState(false);
@@ -187,6 +188,9 @@ export default function DashboardPage() {
 
       <section style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: 16 }}>
         <h3 style={{ marginTop: 0 }}>Facturas Recientes</h3>
+        {errorInvoices && (
+          <ErrorBanner message={errorInvoices} />
+        )}
         <div style={{ overflow: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
@@ -200,9 +204,6 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {errorInvoices && (
-                <tr><td colSpan={6} style={{ color: '#991b1b', padding: 8, borderTop: `1px solid var(--border)` }}>{errorInvoices}</td></tr>
-              )}
               {loadingInvoices && (
                 <tr><td colSpan={6} style={{ color: '#64748b', padding: 8, borderTop: `1px solid var(--border)` }}>Cargando…</td></tr>
               )}

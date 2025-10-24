@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { mappingsApi } from "../api/mappingsApi";
 import { erpsApi } from "../api/erpsApi";
 import { authHeader } from "../../../auth/keycloak";
+import ErrorBanner from "../../../components/ErrorBanner";
 
 type Theme = { card: string; border: string; text: string; muted: string; brand: string };
 
@@ -14,7 +15,7 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
   const [status, setStatus] = useState<'ACTIVE' | 'INACTIVE'>("ACTIVE");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<{ message: string; details?: any } | null>(null);
   const [known, setKnown] = useState<{ invoiceFields: string[]; itemFields: string[]; tables: any }>({ invoiceFields: [], itemFields: [], tables: {} });
   const [erpOptions, setErpOptions] = useState<string[]>(["SAP"]);
 
@@ -23,12 +24,12 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
   const resetForm = () => setForm({ erpName: erp || 'SAP', sourceField: '', targetField: '', transformFn: '', status: 'ACTIVE' });
 
   const load = async () => {
-    setLoading(true); setError("");
+    setLoading(true); setError(null);
     try {
       const data = await mappingsApi.list(erp, status);
       setItems(data || []);
     } catch (e: any) {
-      setError(e.message || 'No se pudo obtener los mapeos');
+      setError({ message: e?.message || 'No se pudo obtener los mapeos', details: e?.details });
     } finally { setLoading(false); }
   };
 
@@ -72,26 +73,26 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
   };
 
   const submit = async (ev: React.FormEvent) => {
-    ev.preventDefault(); setError("");
+    ev.preventDefault(); setError(null);
     try {
       if (!form.sourceField || !form.targetField) throw new Error('Campos obligatorios: sourceField y targetField');
       await mappingsApi.create(form);
       resetForm();
       await load();
-    } catch (e: any) { setError(e.message); }
+    } catch (e: any) { setError({ message: e?.message, details: e?.details }); }
   };
 
   const updateRow = async (row: any) => {
-    setError("");
+    setError(null);
     try {
       await mappingsApi.update(row.id, { sourceField: row.sourceField, targetField: row.targetField, transformFn: row.transformFn, status: row.status });
       await load();
-    } catch (e: any) { setError(e.message); }
+    } catch (e: any) { setError({ message: e?.message, details: e?.details }); }
   };
 
   const toggleStatus = async (row: any) => {
     const next = row.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-    try { await mappingsApi.changeStatus(row.id, next); await load(); } catch (e: any) { setError(e.message); }
+    try { await mappingsApi.changeStatus(row.id, next); await load(); } catch (e: any) { setError({ message: e?.message, details: e?.details }); }
   };
 
   const StatusBadge = ({ s }: { s: string }) => s === 'ACTIVE' ? badge('Activa', '#16a34a') : badge('Inactiva', '#ef4444');
@@ -115,7 +116,7 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
       </div>
 
       {error && (
-        <div style={{ background: '#fef2f2', color: '#991b1b', padding: 10, borderRadius: 8, marginBottom: 12 }}>{error}</div>
+        <ErrorBanner message={error.message} details={error.details} onClose={() => setError(null)} />
       )}
 
       <div style={{ overflow: 'auto', maxHeight: 460, border: `1px solid ${theme.border}`, borderRadius: 8 }}>
