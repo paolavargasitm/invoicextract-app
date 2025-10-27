@@ -27,7 +27,7 @@ class ErpControllerTest {
         });
 
         ResponseEntity<ErpResponse> resp = controller.create(new CreateErpRequest("SAP"));
-        assertEquals(200, resp.getStatusCode().value());
+        assertEquals(201, resp.getStatusCode().value());
         assertEquals(1L, resp.getBody().id());
         assertEquals("SAP", resp.getBody().name());
     }

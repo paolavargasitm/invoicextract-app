@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.List;
+import java.net.URI;
+import co.edu.itm.infra.web.NotFoundException;
 
 @RestController
 @RequestMapping("/api/erps")
@@ -32,7 +34,9 @@ public class ErpController {
     public ResponseEntity<ErpResponse> create(@Validated @RequestBody CreateErpRequest req) {
         var now = Instant.now();
         var e = erpRepo.save(ErpEntity.builder().name(req.name()).status("ACTIVE").createdAt(now).updatedAt(now).build());
-        return ResponseEntity.ok(new ErpResponse(e.getId(), e.getName(), e.getStatus(), e.getCreatedAt().toString(), e.getUpdatedAt().toString()));
+        var location = URI.create("/api/erps/" + e.getId());
+        return ResponseEntity.created(location)
+                .body(new ErpResponse(e.getId(), e.getName(), e.getStatus(), e.getCreatedAt().toString(), e.getUpdatedAt().toString()));
     }
 
     @GetMapping
@@ -50,7 +54,7 @@ public class ErpController {
     @ApiResponse(responseCode = "204", description = "Estado actualizado")
     @ApiResponse(responseCode = "404", description = "ERP no encontrado")
     public ResponseEntity<Void> changeStatus(@PathVariable Long id, @RequestParam String status) {
-        var e = erpRepo.findById(id).orElseThrow();
+        var e = erpRepo.findById(id).orElseThrow(() -> new NotFoundException("ERP not found: " + id));
         e.setStatus(status);
         e.setUpdatedAt(Instant.now());
         erpRepo.save(e);

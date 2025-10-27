@@ -50,7 +50,7 @@ class MappingControllerTest {
 
         MappingController controller = new MappingController(erpRepo, fmRepo);
         ResponseEntity<MappingResponse> resp = controller.create(new CreateMappingRequest("SAP", "a", "b", "TRIM", null));
-        assertEquals(200, resp.getStatusCode().value());
+        assertEquals(201, resp.getStatusCode().value());
         assertEquals(10L, resp.getBody().id());
         assertEquals("b", resp.getBody().targetField());
 

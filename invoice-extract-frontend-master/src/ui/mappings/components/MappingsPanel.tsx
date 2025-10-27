@@ -3,6 +3,7 @@ import { mappingsApi } from "../api/mappingsApi";
 import { erpsApi } from "../api/erpsApi";
 import { authHeader } from "../../../auth/keycloak";
 import ErrorBanner from "../../../components/ErrorBanner";
+import { parseBody, toUserError } from "../../../utils/httpError";
 
 type Theme = { card: string; border: string; text: string; muted: string; brand: string };
 
@@ -97,6 +98,21 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
 
   const StatusBadge = ({ s }: { s: string }) => s === 'ACTIVE' ? badge('Activa', '#16a34a') : badge('Inactiva', '#ef4444');
 
+  const mappingsBase = () => (import.meta.env.VITE_MAPPINGS_BASE_URL || 'http://localhost:8082/invoice-mapping');
+  const testError = async () => {
+    setError(null);
+    try {
+      const res = await fetch(`${mappingsBase()}/api/__qa_not_found__`, { headers: { ...authHeader() } });
+      const text = await res.text();
+      const body = parseBody(text);
+      if (!res.ok) throw toUserError(res, body);
+      // fuerza fallo si responde ok
+      throw new Error('La prueba de error no generó un fallo');
+    } catch (e: any) {
+      setError({ message: e?.message || 'Error simulado', details: e?.details });
+    }
+  };
+
   return (
     <div style={{ background: theme.card, border: `1px solid ${theme.border}`, borderRadius: 12, padding: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
@@ -112,6 +128,7 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
             <option value="INACTIVE">Inactivas</option>
           </select>
           <button onClick={load} disabled={loading} style={{ opacity: loading ? 0.7 : 1, background: theme.brand, color: '#fff', border: 0, borderRadius: 8, padding: '8px 12px', cursor: loading ? 'not-allowed' : 'pointer' }}>{loading ? 'Cargando...' : 'Actualizar'}</button>
+          <button type="button" onClick={testError} title="Probar error (QA)" style={{ background: '#fee2e2', color: '#7f1d1d', border: `1px solid #fecaca`, borderRadius: 8, padding: '8px 12px' }}>Probar error</button>
         </div>
       </div>
 
