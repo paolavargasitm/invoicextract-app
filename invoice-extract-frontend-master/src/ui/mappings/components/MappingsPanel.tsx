@@ -67,6 +67,28 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
 
   const allKnownFields = useMemo(() => ([...(known.invoiceFields || []), ...(known.itemFields || [])]), [known]);
 
+  // Transform selector helpers
+  const transformOptions = [
+    { value: '', label: 'Sin transformación' },
+    { value: 'TRIM', label: 'TRIM' },
+    { value: 'UPPER', label: 'UPPER' },
+    { value: 'DATE_FMT', label: 'DATE_FMT (requiere formato)' },
+    { value: 'FIRST', label: 'FIRST (listas)' },
+    { value: 'SUM', label: 'SUM (listas numéricas)' },
+    { value: 'JOIN', label: 'JOIN (requiere separador)' },
+  ];
+  const parseSpec = (spec?: string): { name: string; arg: string } => {
+    if (!spec) return { name: '', arg: '' };
+    const idx = spec.indexOf(':');
+    if (idx < 0) return { name: spec, arg: '' };
+    return { name: spec.substring(0, idx), arg: spec.substring(idx + 1) };
+  };
+  const buildSpec = (name: string, arg: string) => {
+    if (!name) return '';
+    if (!arg) return name;
+    return `${name}:${arg}`;
+  };
+
   const fieldMeta = (name: string) => {
     const tables = known.tables || {};
     const search = (tbl: any) => (tbl?.fields || []).find((f: any) => f.name === name);
@@ -169,7 +191,37 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
                   )}
                 </td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}` }}>
-                  <input value={row.transformFn || ''} onChange={(e) => setItems(prev => prev.map(x => x.id === row.id ? { ...x, transformFn: e.target.value } : x))} style={{ padding: 8, borderRadius: 6, border: `1px solid ${theme.border}`, width: '100%' }} />
+                  {(() => {
+                    const { name, arg } = parseSpec(row.transformFn);
+                    const needsArg = name === 'DATE_FMT' || name === 'JOIN';
+                    return (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <select
+                          value={name}
+                          onChange={(e) => {
+                            const newName = e.target.value;
+                            const newSpec = buildSpec(newName, (newName === 'DATE_FMT' || newName === 'JOIN') ? arg : '');
+                            setItems(prev => prev.map(x => x.id === row.id ? { ...x, transformFn: newSpec } : x));
+                          }}
+                          style={{ padding: 8, borderRadius: 6, border: `1px solid ${theme.border}` }}
+                        >
+                          {transformOptions.map(opt => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                        </select>
+                        {needsArg && (
+                          <input
+                            placeholder={name === 'DATE_FMT' ? 'yyyy-MM-dd' : 'sep (p.ej. | )'}
+                            value={arg}
+                            onChange={(e) => {
+                              const newArg = e.target.value;
+                              const newSpec = buildSpec(name, newArg);
+                              setItems(prev => prev.map(x => x.id === row.id ? { ...x, transformFn: newSpec } : x));
+                            }}
+                            style={{ padding: 8, borderRadius: 6, border: `1px solid ${theme.border}`, minWidth: 120 }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}` }}>
                   <StatusBadge s={row.status} />
@@ -199,7 +251,33 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
           </select>
           <input list="knownFieldsList" value={form.sourceField} onChange={(e) => setForm({ ...form, sourceField: e.target.value })} placeholder="sourceField" style={{ padding: 8, borderRadius: 8, border: `1px solid ${theme.border}` }} />
           <input list="knownFieldsList" value={form.targetField} onChange={(e) => setForm({ ...form, targetField: e.target.value })} placeholder="targetField" style={{ padding: 8, borderRadius: 8, border: `1px solid ${theme.border}` }} />
-          <input value={form.transformFn} onChange={(e) => setForm({ ...form, transformFn: e.target.value })} placeholder="transformFn" style={{ padding: 8, borderRadius: 8, border: `1px solid ${theme.border}` }} />
+          {(() => {
+            const spec = parseSpec(form.transformFn);
+            const needsArg = spec.name === 'DATE_FMT' || spec.name === 'JOIN';
+            return (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <select
+                  value={spec.name}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    const newSpec = buildSpec(newName, (newName === 'DATE_FMT' || newName === 'JOIN') ? spec.arg : '');
+                    setForm({ ...form, transformFn: newSpec });
+                  }}
+                  style={{ padding: 8, borderRadius: 8, border: `1px solid ${theme.border}` }}
+                >
+                  {transformOptions.map(opt => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                </select>
+                {needsArg && (
+                  <input
+                    placeholder={spec.name === 'DATE_FMT' ? 'yyyy-MM-dd' : 'sep (p.ej. | )'}
+                    value={spec.arg}
+                    onChange={(e) => setForm({ ...form, transformFn: buildSpec(spec.name, e.target.value) })}
+                    style={{ padding: 8, borderRadius: 8, border: `1px solid ${theme.border}` }}
+                  />
+                )}
+              </div>
+            );
+          })()}
           <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} style={{ padding: 8, borderRadius: 8, border: `1px solid ${theme.border}` }}>
             <option value="ACTIVE">ACTIVE</option>
             <option value="INACTIVE">INACTIVE</option>

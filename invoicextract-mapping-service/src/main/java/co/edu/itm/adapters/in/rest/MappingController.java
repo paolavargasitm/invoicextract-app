@@ -24,10 +24,12 @@ import co.edu.itm.infra.web.NotFoundException;
 public class MappingController {
     private final ErpJpaRepository erpRepo;
     private final FieldMappingJpaRepository fmRepo;
+    private final co.edu.itm.domain.ports.MappingRepositoryPort mappingPort;
 
-    public MappingController(ErpJpaRepository erpRepo, FieldMappingJpaRepository fmRepo) {
+    public MappingController(ErpJpaRepository erpRepo, FieldMappingJpaRepository fmRepo, co.edu.itm.domain.ports.MappingRepositoryPort mappingPort) {
         this.erpRepo = erpRepo;
         this.fmRepo = fmRepo;
+        this.mappingPort = mappingPort;
     }
 
     @GetMapping
@@ -63,6 +65,8 @@ public class MappingController {
                 .createdAt(now).updatedAt(now)
                 .build());
         var location = URI.create("/api/mappings/" + e.getId());
+        // Evict cache for this ERP so consumers (export) see the new rule immediately
+        mappingPort.invalidateCacheForErp(req.erpName());
         return ResponseEntity.created(location).body(new MappingResponse(e.getId(), e.getErpId(), e.getSourceField(), e.getTargetField(),
                 e.getTransformFn(), e.getStatus(), e.getVersion(), e.getCreatedAt().toString(), e.getUpdatedAt().toString()));
     }
@@ -80,6 +84,8 @@ public class MappingController {
         if (req.status() != null) e.setStatus(req.status());
         e.setUpdatedAt(Instant.now());
         fmRepo.save(e);
+        // Evict cache for ERP of this mapping
+        erpRepo.findById(e.getErpId()).ifPresent(er -> mappingPort.invalidateCacheForErp(er.getName()));
         return ResponseEntity.ok(new MappingResponse(e.getId(), e.getErpId(), e.getSourceField(), e.getTargetField(),
                 e.getTransformFn(), e.getStatus(), e.getVersion(), e.getCreatedAt().toString(), e.getUpdatedAt().toString()));
     }
@@ -93,6 +99,8 @@ public class MappingController {
         e.setStatus(status);
         e.setUpdatedAt(Instant.now());
         fmRepo.save(e);
+        // Evict cache for ERP of this mapping
+        erpRepo.findById(e.getErpId()).ifPresent(er -> mappingPort.invalidateCacheForErp(er.getName()));
         return ResponseEntity.noContent().build();
     }
 }

@@ -128,8 +128,9 @@ export default function DashboardPage() {
     setLoadingExport(true); setErrorExport("");
     try {
       const qs = new URLSearchParams({ erp, format });
+      qs.set('_ts', String(Date.now())); // cache-busting
       const url = `${mappingsBase()}/api/export?${qs.toString()}`;
-      const res = await fetch(url, { headers: { ...authHeader() } });
+      const res = await fetch(url, { headers: { ...authHeader() } as any, cache: 'no-store' });
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text || `HTTP ${res.status}`);

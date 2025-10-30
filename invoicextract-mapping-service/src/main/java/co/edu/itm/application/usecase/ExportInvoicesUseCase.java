@@ -6,6 +6,8 @@ import co.edu.itm.domain.model.InvoiceItem;
 import co.edu.itm.domain.ports.InvoiceRepositoryPort;
 import co.edu.itm.domain.ports.MappingRepositoryPort;
 import co.edu.itm.domain.service.DynamicMappingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +15,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ExportInvoicesUseCase {
+    private static final Logger log = LoggerFactory.getLogger(ExportInvoicesUseCase.class);
     private final InvoiceRepositoryPort invoiceRepo;
     private final MappingRepositoryPort mappingRepo;
     private final DynamicMappingService mapper;
@@ -28,8 +31,14 @@ public class ExportInvoicesUseCase {
     }
 
     public List<Map<String, Object>> exportMapped(String erpName, boolean flatten) {
+        long t0 = System.currentTimeMillis();
         List<Invoice> invoices = invoiceRepo.findApproved();
         List<FieldMapping> rules = mappingRepo.findActiveByErpName(erpName);
+        log.info("[usecase] exportMapped erp={} invoices={} rules={} flatten={}", erpName, invoices.size(), rules.size(), flatten);
+        if (!rules.isEmpty()) {
+            FieldMapping r0 = rules.get(0);
+            log.debug("[usecase] first rule: sourceField={} targetField={} status={}", r0.getSourceField(), r0.getTargetField(), r0.getStatus());
+        }
         return invoices.stream().map(inv -> {
             Map<String, Object> src = new HashMap<>();
             // Canonical fields aligned with backend Invoice entity (top-level)
@@ -87,7 +96,8 @@ public class ExportInvoicesUseCase {
                 src.put("items", itemsOut);
             }
 
-            return mapper.apply(rules, src);
+            Map<String, Object> out = mapper.apply(rules, src);
+            return out;
         }).collect(Collectors.toList());
     }
 }

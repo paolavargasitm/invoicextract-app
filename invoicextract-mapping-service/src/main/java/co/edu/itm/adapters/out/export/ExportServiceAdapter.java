@@ -2,6 +2,8 @@ package co.edu.itm.adapters.out.export;
 
 import co.edu.itm.domain.ports.ExportServicePort;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
@@ -13,7 +15,14 @@ import java.util.Optional;
 
 @Component
 public class ExportServiceAdapter implements ExportServicePort {
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
+
+    public ExportServiceAdapter() {
+        this.mapper = new ObjectMapper();
+        // Soporta java.time.* en JSON y usa ISO-8601 en lugar de timestamps
+        this.mapper.registerModule(new JavaTimeModule());
+        this.mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
 
     @Override
     public byte[] toCsv(List<Map<String, Object>> rows) {

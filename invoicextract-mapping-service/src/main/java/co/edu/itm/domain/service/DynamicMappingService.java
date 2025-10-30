@@ -29,6 +29,10 @@ public class DynamicMappingService {
 
     private Object resolvePath(Map<String, Object> root, String path) {
         if (path == null || path.isBlank()) return null;
+        // Wildcard support: e.g., items[].quantity -> List of values
+        if (path.contains("[]")) {
+            return resolveWithWildcard(root, path);
+        }
         // Fast path: exact key match
         if (root.containsKey(path)) return root.get(path);
 
@@ -56,5 +60,43 @@ public class DynamicMappingService {
             current = next;
         }
         return current;
+    }
+
+    // Expand wildcard paths like items[].quantity or items[].sub[].code
+    private Object resolveWithWildcard(Map<String, Object> root, String path) {
+        String[] parts = path.split("\\.");
+        return resolveWildcardRecursive(root, parts, 0);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object resolveWildcardRecursive(Object current, String[] parts, int idx) {
+        if (current == null) return null;
+        if (idx >= parts.length) return current;
+
+        String part = parts[idx];
+        boolean wildcard = part.endsWith("[]");
+        String key = wildcard ? part.substring(0, part.length() - 2) : part;
+
+        if (!(current instanceof Map)) return null;
+        Object next = ((Map<String, Object>) current).get(key);
+
+        if (!wildcard) {
+            // Delegates to standard segment resolution (no index here)
+            return resolveWildcardRecursive(next, parts, idx + 1);
+        }
+
+        if (!(next instanceof List)) return null;
+        List<?> list = (List<?>) next;
+        java.util.ArrayList<Object> results = new java.util.ArrayList<>();
+        for (Object elem : list) {
+            Object val = resolveWildcardRecursive(elem, parts, idx + 1);
+            if (val == null) continue;
+            if (val instanceof List<?> vl) {
+                results.addAll(vl);
+            } else {
+                results.add(val);
+            }
+        }
+        return results;
     }
 }
