@@ -4,6 +4,7 @@ import co.edu.itm.adapters.in.rest.ErpController;
 import co.edu.itm.adapters.in.rest.MappingController;
 import co.edu.itm.adapters.out.jpa.mappings.repo.ErpJpaRepository;
 import co.edu.itm.adapters.out.jpa.mappings.repo.FieldMappingJpaRepository;
+import co.edu.itm.domain.ports.MappingRepositoryPort;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -28,6 +29,9 @@ class SecurityAuthorizationTest {
 
     @MockBean
     private FieldMappingJpaRepository fieldMappingJpaRepository;
+
+    @MockBean
+    private MappingRepositoryPort mappingRepositoryPort;
 
     // Satisfy Resource Server bean requirement
     @MockBean

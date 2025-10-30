@@ -82,7 +82,19 @@
       "createdDate",
       "modifiedDate",
       "createdBy",
-      "modifiedBy"
+      "modifiedBy",
+      "items[].itemCode",
+      "items[].description",
+      "items[].quantity",
+      "items[].unit",
+      "items[].unitPrice",
+      "items[].subtotal",
+      "items[].taxAmount",
+      "items[].total",
+      "items[].createdDate",
+      "items[].modifiedDate",
+      "items[].createdBy",
+      "items[].modifiedBy"
     ]
   }
 }

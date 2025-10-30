@@ -35,6 +35,18 @@ La aplicación está construida siguiendo principios de **Clean Architecture** y
 - ✅ **API RESTful**: Documentada con Swagger/OpenAPI
 - ✅ **Seguridad**: Encriptación de credenciales y validación de datos
 
+### 🧩 Módulos del Monorepo
+
+- **invoicextract-backend**: API principal de facturas (Spring Boot)
+- **invoicextract-mapping-service**: Servicio de mapeos ERP (Spring Boot)
+- **frontend**: Frontend React (versión actual)
+- **invoice-extract-frontend-master**: Frontend React (nueva versión en pruebas)
+- **keycloak/themes**: Tema de Keycloak para autenticación
+- **liquibase**: Cambios de base de datos para `invoices`
+- **liquibase-mappings | liquibase-mappings**: Cambios de base de datos para `mappings`
+- **mysql-init**: Scripts de inicialización local
+- **postman**: Colecciones para pruebas
+
 ## 🐳 Construcción y Despliegue con Docker
 
 ### 📋 Prerrequisitos
@@ -92,11 +104,18 @@ La aplicación utiliza **Docker Compose** para orquestar múltiples servicios:
 
 | Servicio | Puerto | Descripción |
 |----------|--------|-------------|
-| **app** | `8080` | Aplicación Spring Boot principal |
-| **mysql** | `3306` | Base de datos MySQL con persistencia |
+| **keycloak-db** | `-` | PostgreSQL para Keycloak |
+| **keycloak** | `8085` | Servidor de autenticación Keycloak |
+| **mysql** | `3306` | Base de datos MySQL `invoices` |
+| **mysql-mappings** | `3307` | Base de datos MySQL `mappings` |
+| **adminer** | `8081` | Admin de base de datos para `invoices` y `mappings` |
+| **liquibase** | `-` | Migraciones para `invoices` |
+| **liquibase-mappings** | `-` | Migraciones para `mappings` |
 | **kafka** | `9092` | Message broker para procesamiento asíncrono |
-| **adminer** | `8081` | Interfaz web para administración de BD |
-| **liquibase** | - | Servicio de migración de base de datos |
+| **app** | `8080` | API principal Spring Boot (`/invoicextract`) |
+| **mapping-service** | `8082` | API de mapeos ERP (`/invoice-mapping`) |
+| **frontend** | `3000` | Frontend React actual |
+| **frontend-new** | `3001` | Frontend React (nueva versión en pruebas) |
 
 ### 🔄 Proceso de Inicialización
 
@@ -111,8 +130,13 @@ La aplicación utiliza **Docker Compose** para orquestar múltiples servicios:
 Una vez que la aplicación esté ejecutándose, puedes acceder a:
 
 - **🔗 API Principal**: http://localhost:8080/invoicextract
-- **📚 Swagger UI**: http://localhost:8080/invoicextract/swagger-ui/index.html
+- **📚 Swagger UI (Backend)**: http://localhost:8080/invoicextract/swagger-ui/index.html
+- **🔗 API Mapping Service**: http://localhost:8082/invoice-mapping
+- **📚 Swagger UI (Mapping Service)**: http://localhost:8082/swagger-ui.html
 - **🗄️ Adminer (DB Admin)**: http://localhost:8081
+- **🔐 Keycloak**: http://localhost:8085
+- **🖥️ Frontend**: http://localhost:3000
+- **🖥️ Frontend (New)**: http://localhost:3001
 - **📊 Health Check**: http://localhost:8080/invoicextract/actuator/health
 
 ## 📁 Estructura del Proyecto
@@ -201,6 +225,21 @@ SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
 # Encriptación (⚠️ Cambiar en producción)
 ENCRYPTION_SECRET_KEY: your-secret-key-here
+
+# Mapping Service (invoicextract-mapping-service)
+MAPPINGS_DB_URL: jdbc:mysql://mysql-mappings:3306/mappings
+MAPPINGS_DB_USER: root
+MAPPINGS_DB_PASS: root
+INVOICES_DB_URL: jdbc:mysql://mysql:3306/invoices
+INVOICES_DB_USER: root
+INVOICES_DB_PASS: root
+
+# Frontend (build args)
+VITE_KEYCLOAK_URL: http://localhost:8085
+VITE_KEYCLOAK_REALM: invoicextract
+VITE_KEYCLOAK_CLIENT_ID: invoices-frontend
+VITE_BACKEND_BASE_URL: http://localhost:8080/invoicextract
+VITE_MAPPINGS_BASE_URL: http://localhost:8082/invoice-mapping
 ```
 
 ### 🗄️ Esquema de Base de Datos

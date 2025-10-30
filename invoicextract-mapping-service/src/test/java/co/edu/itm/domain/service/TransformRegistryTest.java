@@ -3,6 +3,7 @@ package co.edu.itm.domain.service;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -45,5 +46,20 @@ class TransformRegistryTest {
         assertEquals("abc", registry.apply("", "abc"));
         assertEquals("abc", registry.apply("   ", "abc"));
         assertEquals("abc", registry.apply(null, "abc"));
+    }
+
+    @Test
+    void first_shouldReturnFirstElementOfList() {
+        TransformRegistry registry = new TransformRegistry();
+        assertEquals("a", registry.apply("FIRST", List.of("a","b","c")));
+        assertNull(registry.apply("FIRST", List.of()));
+    }
+
+    @Test
+    void join_shouldConcatenateWithSeparator() {
+        TransformRegistry registry = new TransformRegistry();
+        assertEquals("a|b|c", registry.apply("JOIN:|", List.of("a","b","c")));
+        assertEquals("", registry.apply("JOIN:,", List.of()));
+        assertEquals("x", registry.apply("JOIN:-", "x"));
     }
 }
