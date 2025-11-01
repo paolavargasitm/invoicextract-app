@@ -64,10 +64,9 @@ public class MappingController {
                 .version(1)
                 .createdAt(now).updatedAt(now)
                 .build());
-        var location = URI.create("/api/mappings/" + e.getId());
         // Evict cache for this ERP so consumers (export) see the new rule immediately
         mappingPort.invalidateCacheForErp(req.erpName());
-        return ResponseEntity.created(location).body(new MappingResponse(e.getId(), e.getErpId(), e.getSourceField(), e.getTargetField(),
+        return ResponseEntity.ok(new MappingResponse(e.getId(), e.getErpId(), e.getSourceField(), e.getTargetField(),
                 e.getTransformFn(), e.getStatus(), e.getVersion(), e.getCreatedAt().toString(), e.getUpdatedAt().toString()));
     }
 
