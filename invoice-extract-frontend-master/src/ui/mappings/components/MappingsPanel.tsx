@@ -133,7 +133,7 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
             <option value="ACTIVE">Activas</option>
             <option value="INACTIVE">Inactivas</option>
           </select>
-          <button onClick={load} disabled={loading} style={{ opacity: loading ? 0.7 : 1, background: theme.brand, color: '#fff', border: 0, borderRadius: 8, padding: '8px 12px', cursor: loading ? 'not-allowed' : 'pointer' }}>{loading ? 'Cargando...' : 'Actualizar'}</button>
+          <button onClick={load} disabled={loading} style={{ opacity: loading ? 0.7 : 1, background: theme.brand, color: '#fff', border: 0, borderRadius: 8, padding: '8px 12px', cursor: loading ? 'not-allowed' : 'pointer' }}>{loading ? 'Cargando...' : 'Refrescar'}</button>
         </div>
       </div>
 
@@ -210,7 +210,7 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
                   <StatusBadge s={row.status} />
                 </td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}`, whiteSpace: 'nowrap' }}>
-                  <button onClick={() => toggleStatus(row)} style={{ background: '#0ea5e9', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', marginRight: 6, cursor: 'pointer' }}>Toggle</button>
+                  <button onClick={() => toggleStatus(row)} style={{ background: '#0ea5e9', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', marginRight: 6, cursor: 'pointer' }}>{row.status === 'ACTIVE' ? 'desactivar' : 'activar'}</button>
                   <button onClick={() => updateRow(row)} style={{ background: '#16a34a', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>Guardar</button>
                 </td>
               </tr>

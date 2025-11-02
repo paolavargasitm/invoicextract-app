@@ -42,7 +42,7 @@ export default function ErpsPanel({ theme }) {
     <div style={{ background: theme.card, border: `1px solid ${theme.border}`, borderRadius: 12, padding: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
         <h3 style={{ margin: 0, color: theme.text }}>Administración de ERPs</h3>
-        <button onClick={load} disabled={loading} style={{ opacity: loading ? 0.7 : 1, background: theme.brand, color: '#fff', border: 0, borderRadius: 8, padding: '8px 12px', cursor: loading ? 'not-allowed' : 'pointer' }}>{loading ? 'Cargando...' : 'Actualizar'}</button>
+        <button onClick={load} disabled={loading} style={{ opacity: loading ? 0.7 : 1, background: theme.brand, color: '#fff', border: 0, borderRadius: 8, padding: '8px 12px', cursor: loading ? 'not-allowed' : 'pointer' }}>{loading ? 'Cargando...' : 'Refrescar'}</button>
       </div>
 
       {error && (
@@ -66,7 +66,7 @@ export default function ErpsPanel({ theme }) {
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}` }}>{row.name}</td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}` }}><StatusBadge s={row.status} /></td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}`, whiteSpace: 'nowrap' }}>
-                  <button onClick={() => toggleStatus(row)} style={{ background: '#0ea5e9', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>Toggle</button>
+                  <button onClick={() => toggleStatus(row)} style={{ background: '#0ea5e9', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>{row.status === 'ACTIVE' ? 'desactivar' : 'activar'}</button>
                 </td>
               </tr>
             ))}
