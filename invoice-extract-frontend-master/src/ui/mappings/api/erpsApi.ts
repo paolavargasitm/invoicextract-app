@@ -20,7 +20,7 @@ async function request(path: string, options: RequestInit = {}) {
 }
 
 export const erpsApi = {
-  list: () => request('/api/erps'),
+  list: (status?: string) => request(`/api/erps${status ? `?status=${encodeURIComponent(status)}` : ''}`),
   create: (payload: any) => request('/api/erps', { method: 'POST', body: JSON.stringify(payload) }),
   changeStatus: (id: string, status: string) => request(`/api/erps/${id}/status?status=${encodeURIComponent(status)}`, { method: 'PATCH' }),
 };

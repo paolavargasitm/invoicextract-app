@@ -39,26 +39,26 @@ class MappingControllerTest {
         verify(fmRepo).findByErpIdAndStatus(1L, "ACTIVE");
     }
 
-//    @Test
-//    void create_shouldPersistAndReturnResponse() {
-//        ErpJpaRepository erpRepo = mock(ErpJpaRepository.class);
-//        FieldMappingJpaRepository fmRepo = mock(FieldMappingJpaRepository.class);
-//        MappingRepositoryPort mappingPort = mock(MappingRepositoryPort.class);
-//        when(erpRepo.findByNameIgnoreCase("SAP")).thenReturn(Optional.of(ErpEntity.builder().id(1L).name("SAP").status("ACTIVE").build()));
-//        when(fmRepo.save(any(FieldMappingEntity.class))).thenAnswer(inv -> {
-//            FieldMappingEntity e = inv.getArgument(0);
-//            e.setId(10L);
-//            return e;
-//        });
-//
-//        MappingController controller = new MappingController(erpRepo, fmRepo, mappingPort);
-//        ResponseEntity<MappingResponse> resp = controller.create(new CreateMappingRequest("SAP", "a", "b", "TRIM", null));
-//        assertEquals(200, resp.getStatusCode().value());
-//        assertEquals(10L, resp.getBody().id());
-//        assertEquals("b", resp.getBody().targetField());
-//
-//        verify(fmRepo).save(any(FieldMappingEntity.class));
-//    }
+    @Test
+    void create_shouldPersistAndReturnResponse() {
+        ErpJpaRepository erpRepo = mock(ErpJpaRepository.class);
+        FieldMappingJpaRepository fmRepo = mock(FieldMappingJpaRepository.class);
+        MappingRepositoryPort mappingPort = mock(MappingRepositoryPort.class);
+        when(erpRepo.findByNameIgnoreCase("SAP")).thenReturn(Optional.of(ErpEntity.builder().id(1L).name("SAP").status("ACTIVE").build()));
+        when(fmRepo.save(any(FieldMappingEntity.class))).thenAnswer(inv -> {
+            FieldMappingEntity e = inv.getArgument(0);
+            e.setId(10L);
+            return e;
+        });
+
+        MappingController controller = new MappingController(erpRepo, fmRepo, mappingPort);
+        ResponseEntity<MappingResponse> resp = controller.create(new CreateMappingRequest("SAP", "a", "b", "TRIM", null));
+        assertEquals(201, resp.getStatusCode().value());
+        assertEquals(10L, resp.getBody().id());
+        assertEquals("b", resp.getBody().targetField());
+
+        verify(fmRepo).save(any(FieldMappingEntity.class));
+    }
 
     @Test
     void changeStatus_shouldPersist() {
