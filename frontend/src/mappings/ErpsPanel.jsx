@@ -10,7 +10,7 @@ export default function ErpsPanel({ theme }) {
   const load = async () => {
     setLoading(true); setError('');
     try {
-      const data = await erpsApi.list();
+      const data = await erpsApi.list('ACTIVE');
       setItems(data || []);
     } catch (e) { setError(e.message || 'No se pudo obtener los ERPs'); }
     finally { setLoading(false); }

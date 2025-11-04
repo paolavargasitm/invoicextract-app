@@ -36,12 +36,12 @@ class ErpControllerTest {
     void list_shouldMapEntitiesToResponses() {
         ErpJpaRepository repo = mock(ErpJpaRepository.class);
         Instant now = Instant.now();
-        when(repo.findAll()).thenReturn(List.of(
+        when(repo.findByStatusIgnoreCase("ACTIVE")).thenReturn(List.of(
                 ErpEntity.builder().id(1L).name("SAP").status("ACTIVE").createdAt(now).updatedAt(now).build()
         ));
         ErpController controller = new ErpController(repo);
 
-        List<ErpResponse> out = controller.list();
+        List<ErpResponse> out = controller.list("ACTIVE");
         assertEquals(1, out.size());
         assertEquals("SAP", out.get(0).name());
     }

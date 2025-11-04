@@ -38,8 +38,10 @@ public class ErpController {
     @GetMapping
     @Operation(summary = "Listar ERPs")
     @ApiResponse(responseCode = "200", description = "Listado de ERPs")
-    public List<ErpResponse> list() {
-        return erpRepo.findAll().stream().map(e -> new ErpResponse(e.getId(), e.getName(), e.getStatus(),
+    public List<ErpResponse> list(@RequestParam(required = false) String status) {
+        var normalized = (status == null) ? null : status.trim();
+        var data = (normalized == null || normalized.isBlank()) ? erpRepo.findAll() : erpRepo.findByStatusIgnoreCase(normalized);
+        return data.stream().map(e -> new ErpResponse(e.getId(), e.getName(), e.getStatus(),
                 e.getCreatedAt() == null ? null : e.getCreatedAt().toString(),
                 e.getUpdatedAt() == null ? null : e.getUpdatedAt().toString()
         )).toList();

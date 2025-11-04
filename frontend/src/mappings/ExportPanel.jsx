@@ -14,7 +14,7 @@ export default function ExportPanel({ theme }) {
   useEffect(() => {
     const loadErps = async () => {
       try {
-        const data = await erpsApi.list();
+        const data = await erpsApi.list('ACTIVE');
         setErps(data || []);
         if (data && data.length > 0) setErp(data[0].name);
       } catch (e) { setError(e.message || 'No se pudo cargar ERPs'); }

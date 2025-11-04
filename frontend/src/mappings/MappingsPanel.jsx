@@ -153,7 +153,7 @@ export default function MappingsPanel({ theme }) {
                   <StatusBadge s={row.status} />
                 </td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}`, whiteSpace: 'nowrap' }}>
-                  <button onClick={() => toggleStatus(row)} style={{ background: '#0ea5e9', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', marginRight: 6, cursor: 'pointer' }}>{row.status === 'ACTIVE' ? 'desactivar' : 'activar'}</button>
+                  <button onClick={() => toggleStatus(row)} style={{ background: '#0ea5e9', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', marginRight: 6, cursor: 'pointer' }}>{row.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button>
                   <button onClick={() => updateRow(row)} style={{ background: '#16a34a', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>Guardar</button>
                 </td>
               </tr>

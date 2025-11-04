@@ -10,6 +10,8 @@ type InvoiceRow = {
   provider: string;
   amount: number;
   status: "Aprobada" | "Rechazada" | "Pendiente";
+  erp?: string;
+  customer?: string;
 };
 
 export default function DashboardPage() {
@@ -17,6 +19,9 @@ export default function DashboardPage() {
   const [userOrEmail, setUserOrEmail] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"" | "APPROVED" | "REJECTED" | "PENDING">("");
+  const [senderTaxId, setSenderTaxId] = useState<string>("");
+  const [receiverTaxId, setReceiverTaxId] = useState<string>("");
   // Invoices state
   const [rows, setRows] = useState<InvoiceRow[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
@@ -47,16 +52,24 @@ export default function DashboardPage() {
     const date = String(dateRaw).slice(0, 10);
     const provider = inv?.provider || inv?.providerBusinessName || inv?.senderBusinessName || inv?.supplierName || "—";
     const amountNum = Number(inv?.amount ?? inv?.total ?? inv?.totalAmount ?? inv?.grandTotal ?? 0);
-    return { id: String(id), date, provider: String(provider), amount: isNaN(amountNum) ? 0 : amountNum, status: mapStatus(inv?.status) };
+    const erp = inv?.erp || inv?.erpName || inv?.system || inv?.sourceErp || undefined;
+    const customer = inv?.customer || inv?.customerName || inv?.buyerBusinessName || inv?.receiverBusinessName || undefined;
+    return { id: String(id), date, provider: String(provider), amount: isNaN(amountNum) ? 0 : amountNum, status: mapStatus(inv?.status), erp, customer };
   };
   const loadInvoices = async () => {
     setLoadingInvoices(true); setErrorInvoices("");
     try {
+      // Use backend GET /api/invoices/filter as defined in InvoiceController
       const qs = new URLSearchParams();
-      if (userOrEmail.trim()) qs.set("user", userOrEmail.trim());
-      if (from) qs.set("from", from);
-      if (to) qs.set("to", to);
-      const url = `${backendBase()}/api/invoices${qs.toString() ? `?${qs}` : ''}`;
+      // Nota: userOrEmail no mapea a ningún parámetro del backend; si se requiere, definimos qué campo usar.
+      // Soportados: id, senderTaxId, receiverTaxId, status, startDate, endDate
+      if (statusFilter) qs.set('status', statusFilter);
+      if (senderTaxId.trim()) qs.set('senderTaxId', senderTaxId.trim());
+      if (receiverTaxId.trim()) qs.set('receiverTaxId', receiverTaxId.trim());
+      if (from) qs.set('startDate', `${from}T00:00:00`);
+      if (to) qs.set('endDate', `${to}T23:59:59`);
+      // ERP no está soportado en el endpoint actual; filtro retirado del Dashboard.
+      const url = `${backendBase()}/api/invoices/filter${qs.toString() ? `?${qs}` : ''}`;
       const res = await fetch(url, { headers: { ...authHeader() } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
@@ -98,12 +111,14 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadErps = async () => {
       try {
-        const res = await fetch(`${mappingsBase()}/api/erps`, { headers: { ...authHeader() } });
+        const res = await fetch(`${mappingsBase()}/api/erps?status=ACTIVE`, { headers: { ...authHeader() } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         // Normalize to string list (some backends return objects: {id,name,status,...})
         const raw = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []);
-        const list: string[] = raw.map((x: any) => typeof x === 'string' ? x : (x?.name ?? String(x?.id ?? 'SAP')));
+        const list: string[] = raw
+          .filter((x: any) => (x?.status ?? 'ACTIVE').toUpperCase() === 'ACTIVE')
+          .map((x: any) => typeof x === 'string' ? x : (x?.name ?? String(x?.id ?? 'SAP')));
         if (list.length) {
           setErpOptions(list);
           if (!list.includes(erp)) setErp(list[0]);
@@ -157,12 +172,19 @@ export default function DashboardPage() {
     <div style={{ display: "grid", gap: 16 }}>
       <section style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: 16 }}>
         <h2 style={{ marginTop: 0, color: "var(--text)" }}>Dashboard General</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, alignItems: "end" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, alignItems: "end" }}>
           <input placeholder="ID usuario / Correo" value={userOrEmail} onChange={e => setUserOrEmail(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
           <input type="date" value={from} onChange={e => setFrom(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
           <input type="date" value={to} onChange={e => setTo(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }}>
+            <option value="">Todos los estados</option>
+            <option value="PENDING">Pendiente</option>
+            <option value="APPROVED">Aprobada</option>
+            <option value="REJECTED">Rechazada</option>
+          </select>
+          <input placeholder="Sender Tax ID" value={senderTaxId} onChange={e => setSenderTaxId(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
+          <input placeholder="Receiver Tax ID" value={receiverTaxId} onChange={e => setReceiverTaxId(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
           <button type="button" onClick={() => { console.debug('dashboard: open export modal'); setShowExport(true); }} style={{ background: "#16a34a", color: "#fff", border: 0, borderRadius: 8, padding: "10px 12px" }}>Exportar data a ERP</button>
-          <button onClick={() => alert("Enviar a ERP (placeholder)")} style={{ background: "var(--brand)", color: "#fff", border: 0, borderRadius: 8, padding: "10px 12px" }}>Enviar a ERP (SAP)</button>
         </div>
         <div style={{ marginTop: 12 }}>
           <button onClick={onSearch} style={{ background: "var(--brand)", color: "#fff", border: 0, borderRadius: 8, padding: "10px 16px" }}>Buscar</button>
@@ -200,13 +222,15 @@ export default function DashboardPage() {
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Fecha</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Proveedor</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Monto</th>
+                <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>ERP</th>
+                <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Cliente</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Estado</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loadingInvoices && (
-                <tr><td colSpan={6} style={{ color: '#64748b', padding: 8, borderTop: `1px solid var(--border)` }}>Cargando…</td></tr>
+                <tr><td colSpan={8} style={{ color: '#64748b', padding: 8, borderTop: `1px solid var(--border)` }}>Cargando…</td></tr>
               )}
               {!loadingInvoices && !errorInvoices && rows.map((row, idx) => (
                 <tr key={row.id} style={{ background: idx % 2 === 0 ? "#ffffff" : "#f9fafb" }}>
@@ -214,6 +238,8 @@ export default function DashboardPage() {
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.date}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.provider}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{fmtCurrency(row.amount)}</td>
+                  <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.erp || '—'}</td>
+                  <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.customer || '—'}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>
                     {row.status === "Aprobada" && <Badge text="Aprobada" tone="green" />}
                     {row.status === "Rechazada" && <Badge text="Rechazada" tone="red" />}
@@ -226,7 +252,7 @@ export default function DashboardPage() {
               ))}
               {!loadingInvoices && !errorInvoices && rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ color: '#64748b', padding: 8, borderTop: `1px solid var(--border)` }}>Sin resultados</td>
+                  <td colSpan={8} style={{ color: '#64748b', padding: 8, borderTop: `1px solid var(--border)` }}>Sin resultados</td>
                 </tr>
               )}
             </tbody>

@@ -39,9 +39,10 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
   useEffect(() => {
     const fetchErps = async () => {
       try {
-        const data = await erpsApi.list();
+        const data = await erpsApi.list('ACTIVE');
         const raw = Array.isArray(data) ? data : (Array.isArray((data as any)?.items) ? (data as any).items : []);
-        const names: string[] = raw.map((x: any) => typeof x === 'string' ? x : (x?.name ?? String(x?.id ?? 'SAP')));
+        const onlyActive = raw.filter((x: any) => (x?.status ?? '').toUpperCase().trim() === 'ACTIVE');
+        const names: string[] = onlyActive.map((x: any) => typeof x === 'string' ? x : (x?.name ?? String(x?.id ?? 'SAP')));
         if (names.length) {
           setErpOptions(names);
           if (!names.includes(erp)) { setErp(names[0]); setForm(f => ({ ...f, erpName: names[0] })); }
@@ -49,6 +50,9 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
       } catch { /* keep defaults */ }
     };
     fetchErps();
+    const onErpsChanged = () => { fetchErps(); };
+    window.addEventListener('erps:changed', onErpsChanged);
+    return () => window.removeEventListener('erps:changed', onErpsChanged);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -210,7 +214,7 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
                   <StatusBadge s={row.status} />
                 </td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}`, whiteSpace: 'nowrap' }}>
-                  <button onClick={() => toggleStatus(row)} style={{ background: '#0ea5e9', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', marginRight: 6, cursor: 'pointer' }}>{row.status === 'ACTIVE' ? 'desactivar' : 'activar'}</button>
+                  <button onClick={() => toggleStatus(row)} style={{ background: '#0ea5e9', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', marginRight: 6, cursor: 'pointer' }}>{row.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button>
                   <button onClick={() => updateRow(row)} style={{ background: '#16a34a', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>Guardar</button>
                 </td>
               </tr>

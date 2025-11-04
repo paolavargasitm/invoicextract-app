@@ -33,7 +33,12 @@ export default function ErpsPanel({ theme }: { theme: Theme }) {
 
   const toggleStatus = async (row: any) => {
     const next = row.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-    try { await erpsApi.changeStatus(row.id, next); await load(); } catch (e: any) { setError({ message: e?.message, details: e?.details }); }
+    try {
+      await erpsApi.changeStatus(row.id, next);
+      await load();
+      // Notify other components to refresh ERP lists
+      window.dispatchEvent(new CustomEvent('erps:changed'));
+    } catch (e: any) { setError({ message: e?.message, details: e?.details }); }
   };
 
   const badge = (text: string, color: string) => (
@@ -69,7 +74,7 @@ export default function ErpsPanel({ theme }: { theme: Theme }) {
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}` }}>{row.name}</td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}` }}><StatusBadge s={row.status} /></td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}`, whiteSpace: 'nowrap' }}>
-                  <button onClick={() => toggleStatus(row)} style={{ background: '#0ea5e9', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>{row.status === 'ACTIVE' ? 'desactivar' : 'activar'}</button>
+                  <button onClick={() => toggleStatus(row)} style={{ background: '#0ea5e9', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>{row.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button>
                 </td>
               </tr>
             ))}
