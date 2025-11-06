@@ -173,38 +173,38 @@ export default function DashboardPage() {
       <section style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: 16 }}>
         <h2 style={{ marginTop: 0, color: "var(--text)" }}>Dashboard General</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, alignItems: "end" }}>
-          <input placeholder="ID usuario / Correo" value={userOrEmail} onChange={e => setUserOrEmail(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
-          <input type="date" value={from} onChange={e => setFrom(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
-          <input type="date" value={to} onChange={e => setTo(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }}>
+          <input placeholder="ID usuario / Correo" value={userOrEmail} onChange={e => setUserOrEmail(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+          <input type="date" value={from} onChange={e => setFrom(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+          <input type="date" value={to} onChange={e => setTo(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }}>
             <option value="">Todos los estados</option>
             <option value="PENDING">Pendiente</option>
             <option value="APPROVED">Aprobada</option>
             <option value="REJECTED">Rechazada</option>
           </select>
-          <input placeholder="Sender Tax ID" value={senderTaxId} onChange={e => setSenderTaxId(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
-          <input placeholder="Receiver Tax ID" value={receiverTaxId} onChange={e => setReceiverTaxId(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)` }} />
+          <input placeholder="Sender Tax ID" value={senderTaxId} onChange={e => setSenderTaxId(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+          <input placeholder="Receiver Tax ID" value={receiverTaxId} onChange={e => setReceiverTaxId(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
           <button type="button" onClick={() => { console.debug('dashboard: open export modal'); setShowExport(true); }} style={{ background: "#16a34a", color: "#fff", border: 0, borderRadius: 8, padding: "10px 12px" }}>Exportar data a ERP</button>
         </div>
         <div style={{ marginTop: 12 }}>
           <button onClick={onSearch} style={{ background: "var(--brand)", color: "#fff", border: 0, borderRadius: 8, padding: "10px 16px" }}>Buscar</button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
-          <div style={{ background: "#e0e7ff", border: `1px solid var(--border)`, borderRadius: 12, padding: 14 }}>
-            <div style={{ color: "#334155", fontSize: 12 }}>Facturas Ingresadas</div>
-            <div style={{ fontSize: 28, color: "#1f2937" }}>{stats.total}</div>
+          <div style={{ background: "#bfdbfe", borderRadius: 12, padding: 14 }}>
+            <div style={{ color: "#1e3a8a", fontSize: 12 }}>Facturas Ingresadas</div>
+            <div style={{ fontSize: 28, color: "#0f172a" }}>{stats.total}</div>
           </div>
-          <div style={{ background: "#dcfce7", border: `1px solid var(--border)`, borderRadius: 12, padding: 14 }}>
-            <div style={{ color: "#166534", fontSize: 12 }}>Aprobadas</div>
-            <div style={{ fontSize: 28, color: "#14532d" }}>{stats.aprobadas}</div>
+          <div style={{ background: "#bbf7d0", borderRadius: 12, padding: 14 }}>
+            <div style={{ color: "#14532d", fontSize: 12 }}>Aprobadas</div>
+            <div style={{ fontSize: 28, color: "#0f172a" }}>{stats.aprobadas}</div>
           </div>
-          <div style={{ background: "#fee2e2", border: `1px solid var(--border)`, borderRadius: 12, padding: 14 }}>
-            <div style={{ color: "#991b1b", fontSize: 12 }}>Rechazadas</div>
-            <div style={{ fontSize: 28, color: "#7f1d1d" }}>{stats.rechazadas}</div>
+          <div style={{ background: "#fecaca", borderRadius: 12, padding: 14 }}>
+            <div style={{ color: "#7f1d1d", fontSize: 12 }}>Rechazadas</div>
+            <div style={{ fontSize: 28, color: "#0f172a" }}>{stats.rechazadas}</div>
           </div>
-          <div style={{ background: "#fef3c7", border: `1px solid var(--border)`, borderRadius: 12, padding: 14 }}>
-            <div style={{ color: "#92400e", fontSize: 12 }}>Monto Total</div>
-            <div style={{ fontSize: 24, color: "#7c2d12", fontWeight: 700 }}>{fmtCurrency(stats.monto)}</div>
+          <div style={{ background: "#fef3c7", borderRadius: 12, padding: 14 }}>
+            <div style={{ color: "#7c2d12", fontSize: 12 }}>Monto Total</div>
+            <div style={{ fontSize: 24, color: "#0f172a", fontWeight: 700 }}>{fmtCurrency(stats.monto)}</div>
           </div>
         </div>
       </section>
@@ -217,7 +217,7 @@ export default function DashboardPage() {
         <div style={{ overflow: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ textAlign: "left", color: "#64748b" }}>
+              <tr style={{ textAlign: "left", color: "var(--muted)" }}>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>ID</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Fecha</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Proveedor</th>
@@ -230,10 +230,10 @@ export default function DashboardPage() {
             </thead>
             <tbody>
               {loadingInvoices && (
-                <tr><td colSpan={8} style={{ color: '#64748b', padding: 8, borderTop: `1px solid var(--border)` }}>Cargando…</td></tr>
+                <tr><td colSpan={8} style={{ color: 'var(--muted)', padding: 8, borderTop: `1px solid var(--border)` }}>Cargando…</td></tr>
               )}
               {!loadingInvoices && !errorInvoices && rows.map((row, idx) => (
-                <tr key={row.id} style={{ background: idx % 2 === 0 ? "#ffffff" : "#f9fafb" }}>
+                <tr key={row.id} style={{ background: idx % 2 === 0 ? "var(--card)" : "var(--bg)" }}>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.id}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.date}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.provider}</td>
@@ -252,7 +252,7 @@ export default function DashboardPage() {
               ))}
               {!loadingInvoices && !errorInvoices && rows.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ color: '#64748b', padding: 8, borderTop: `1px solid var(--border)` }}>Sin resultados</td>
+                  <td colSpan={8} style={{ color: 'var(--muted)', padding: 8, borderTop: `1px solid var(--border)` }}>Sin resultados</td>
                 </tr>
               )}
             </tbody>
@@ -303,10 +303,10 @@ function Modal({ open, onClose, children }: { open: boolean, onClose: () => void
   console.debug('dashboard: export modal rendered');
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.5)', display: 'grid', placeItems: 'center', zIndex: 9999 }}>
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--border)', width: 'min(560px, 92vw)', padding: 16 }}>
+      <div style={{ background: 'var(--card)', color: 'var(--text)', borderRadius: 12, border: '1px solid var(--border)', width: 'min(560px, 92vw)', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <h3 style={{ margin: 0 }}>Exportación de Mapeos</h3>
-          <button onClick={onClose} style={{ background: '#e2e8f0', color: '#0f172a', border: 0, borderRadius: 8, padding: '6px 10px' }}>Cerrar</button>
+          <button onClick={onClose} style={{ background: 'var(--border)', color: 'var(--text)', border: 0, borderRadius: 8, padding: '6px 10px' }}>Cerrar</button>
         </div>
         {children}
       </div>
@@ -328,7 +328,7 @@ function InvoiceDetailModal({ open, id, onClose }: { open: boolean, id: string |
   };
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.5)', display: 'grid', placeItems: 'center', zIndex: 50 }}>
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--border)', width: 'min(980px, 96vw)', padding: 16 }}>
+      <div style={{ background: 'var(--card)', color: 'var(--text)', borderRadius: 12, border: '1px solid var(--border)', width: 'min(980px, 96vw)', padding: 16 }}>
         <InvoiceDetailView
           id={invoice.id}
           provider={invoice.provider}

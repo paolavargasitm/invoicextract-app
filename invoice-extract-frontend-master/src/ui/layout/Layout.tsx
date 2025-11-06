@@ -4,7 +4,7 @@ import Footer from "./Footer";
 
 export default function Layout() {
   return (
-    <div style={{ background: "#f5f7fb", minHeight: "100vh", display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: "var(--bg)", minHeight: "100vh", display: 'flex', flexDirection: 'column' }}>
       <Navbar />
       <main style={{ maxWidth: 1120, margin: "0 auto", padding: "24px 20px", flex: 1, width: '100%' }}>
         <Outlet />

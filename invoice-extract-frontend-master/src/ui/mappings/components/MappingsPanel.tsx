@@ -159,7 +159,7 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
           </thead>
           <tbody>
             {items?.map((row, idx) => (
-              <tr key={row.id} style={{ background: idx % 2 === 0 ? '#ffffff' : '#f9fafb' }}>
+              <tr key={row.id} style={{ background: idx % 2 === 0 ? theme.card : 'var(--bg)' }}>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}` }}>{row.id}</td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}` }}>
                   <input list="knownFieldsList" value={row.sourceField || ''} onChange={(e) => setItems(prev => prev.map(x => x.id === row.id ? { ...x, sourceField: e.target.value } : x))} style={{ padding: 8, borderRadius: 6, border: `1px solid ${theme.border}`, width: '100%' }} />
@@ -214,8 +214,8 @@ export default function MappingsPanel({ theme }: { theme: Theme }) {
                   <StatusBadge s={row.status} />
                 </td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}`, whiteSpace: 'nowrap' }}>
-                  <button onClick={() => toggleStatus(row)} style={{ background: '#0ea5e9', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', marginRight: 6, cursor: 'pointer' }}>{row.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button>
-                  <button onClick={() => updateRow(row)} style={{ background: '#16a34a', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>Guardar</button>
+                  <button onClick={() => toggleStatus(row)} style={{ background: theme.brand, color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', marginRight: 6, cursor: 'pointer' }}>{row.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button>
+                  <button onClick={() => updateRow(row)} style={{ background: theme.brand, color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>Guardar</button>
                 </td>
               </tr>
             ))}

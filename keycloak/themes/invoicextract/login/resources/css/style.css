@@ -84,7 +84,7 @@ body, .login-pf body {
   width: 120px;
   height: 120px;
   margin: 0 auto 12px auto;
-  background: url('../img/logo.svg') center/contain no-repeat; /* ruta correcta */
+  background: url('../img/logo.png') center/contain no-repeat; /* ruta correcta */
 }
 
 /* 3) Título principal del formulario */
