@@ -69,12 +69,12 @@ export default function ErpsPanel({ theme }: { theme: Theme }) {
           </thead>
           <tbody>
             {items?.map((row, idx) => (
-              <tr key={row.id} style={{ background: idx % 2 === 0 ? '#ffffff' : '#f9fafb' }}>
+              <tr key={row.id} style={{ background: idx % 2 === 0 ? theme.card : 'var(--bg)' }}>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}` }}>{row.id}</td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}` }}>{row.name}</td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}` }}><StatusBadge s={row.status} /></td>
                 <td style={{ padding: 8, borderTop: `1px solid ${theme.border}`, whiteSpace: 'nowrap' }}>
-                  <button onClick={() => toggleStatus(row)} style={{ background: '#0ea5e9', color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>{row.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button>
+                  <button onClick={() => toggleStatus(row)} style={{ background: theme.brand, color: '#fff', border: 0, borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>{row.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button>
                 </td>
               </tr>
             ))}
@@ -91,7 +91,7 @@ export default function ErpsPanel({ theme }: { theme: Theme }) {
         <h4 style={{ margin: '4px 0', color: theme.text }}>Crear nuevo ERP</h4>
         <form onSubmit={create} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre del ERP" style={{ padding: 8, borderRadius: 8, border: `1px solid ${theme.border}` }} />
-          <button type="submit" style={{ background: '#16a34a', color: '#fff', border: 0, borderRadius: 8, padding: '8px 12px', cursor: 'pointer' }}>Crear</button>
+          <button type="submit" style={{ background: theme.brand, color: '#fff', border: 0, borderRadius: 8, padding: '8px 12px', cursor: 'pointer' }}>Crear</button>
         </form>
       </div>
     </div>
