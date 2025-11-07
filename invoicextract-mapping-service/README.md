@@ -33,3 +33,53 @@ en `Mappings DB`.
 - `adapters/in/` (REST)
 - `adapters/out/` (JPA/JDBC/Exportadores)
 - `infra/` (config, security, liquibase)
+
+## Análisis con SonarQube (local)
+
+### 1) Levantar SonarQube
+
+Usa el `docker-compose` de la raíz si ya define `sonarqube` y `sonar-db`:
+
+```bash
+docker compose up -d sonarqube sonar-db
+```
+
+### 2) Crear un token en SonarQube
+
+En tu usuario → My Account → Security → Generate Tokens. Copia el token.
+
+### 3) Ejecutar tests y cobertura
+
+Desde esta carpeta (`invoicextract-mapping-service`):
+
+```bash
+mvn clean test jacoco:report
+```
+
+### 4) Ejecutar análisis con Maven Sonar Scanner
+
+Si en el `pom.xml` ya hay propiedades Sonar, basta con:
+
+```bash
+mvn sonar:sonar -Dsonar.token=<TU_TOKEN>
+```
+
+O bien forzar parámetros por CLI:
+
+```bash
+mvn sonar:sonar \
+  -Dsonar.token=<TU_TOKEN> \
+  -Dsonar.host.url=http://localhost:9000 \
+  -Dsonar.projectKey=invoicextract-mapping-service \
+  -Dsonar.projectName="InvoiceExtract Mapping Service" \
+  -Dsonar.projectBaseDir=. \
+  -Dsonar.sources=src/main/java \
+  -Dsonar.tests=src/test/java \
+  -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+```
+
+### 5) Troubleshooting
+
+- Usa `-Dsonar.token` (preferido a `-Dsonar.login`).
+- Haz commit antes de analizar para evitar warnings de SCM/blame.
+- Si ves clases antiguas, ejecuta `mvn clean` y revisa `target/site/jacoco/jacoco.xml` antes de `sonar:sonar`.

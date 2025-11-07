@@ -19,6 +19,15 @@
         <java.version>17</java.version>
         <lombok.version>1.18.30</lombok.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
+        <!-- SonarQube properties (used by sonar-maven-plugin) -->
+        <sonar.projectKey>invoicextract-backend-clean</sonar.projectKey>
+        <sonar.projectName>Invoice Extract Backend</sonar.projectName>
+        <sonar.host.url>http://localhost:9000</sonar.host.url>
+        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.sources>src/main/java</sonar.sources>
+        <sonar.tests>src/test/java</sonar.tests>
+        <sonar.scm.provider>git</sonar.scm.provider>
+        <sonar.coverage.exclusions>**/*Application.java, **/application/config/**, **/application/*Config.java, **/infrastructure/**/config/**, **/application/dto/**, **/infrastructure/**/dto/**, **/domain/entity/**, **/domain/enums/**, **/infrastructure/messaging/dto/**, **/*Message.java, **/*DTO.java, **/*Config.java</sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
@@ -140,6 +149,30 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.10</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>3.10.0.2594</version>
             </plugin>
         </plugins>
     </build>
