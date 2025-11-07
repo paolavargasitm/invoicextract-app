@@ -230,7 +230,52 @@ services:
     networks:
       - app_network
 
+  sonar-db:
+    image: postgres:15
+    container_name: sonarqube-db
+    environment:
+      POSTGRES_USER: sonarqube
+      POSTGRES_PASSWORD: sonarqube
+      POSTGRES_DB: sonarqube
+    volumes:
+      - sonar-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonarqube -d sonarqube"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app_network
+
+  sonarqube:
+    image: sonarqube:10.4.1-community
+    container_name: sonarqube
+    depends_on:
+      sonar-db:
+        condition: service_healthy
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonar-db:5432/sonarqube
+      SONAR_JDBC_USERNAME: sonarqube
+      SONAR_JDBC_PASSWORD: sonarqube
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonar-data:/opt/sonarqube/data
+      - sonar-logs:/opt/sonarqube/logs
+      - sonar-extensions:/opt/sonarqube/extensions
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "curl -fsS http://localhost:9000/api/system/health | grep -q 'GREEN' "]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+    networks:
+      - app_network
+
 volumes:
   mysql-data:
   mysql-mappings-data:
   keycloak-db-data:
+  sonar-db-data:
+  sonar-data:
+  sonar-logs:
+  sonar-extensions:
