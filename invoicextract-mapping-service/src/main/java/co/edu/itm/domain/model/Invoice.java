@@ -23,6 +23,7 @@ public class Invoice {
     private String senderTaxId;
     private String senderTaxIdWithoutCheckDigit;
     private String senderBusinessName;
+    private String fileUrl;
     private String relatedDocumentNumber;
     private BigDecimal amount;
     private LocalDate issueDate;

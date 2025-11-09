@@ -43,6 +43,11 @@ databaseChangeLog:
                   name: sender_business_name
                   type: VARCHAR(255)
               - column:
+                  name: file_url
+                  type: VARCHAR(1024)
+                  constraints:
+                    nullable: true
+              - column:
                   name: related_document_number
                   type: VARCHAR(100)
               - column:

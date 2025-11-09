@@ -1,5 +1,6 @@
 package co.edu.itm.invoiceextract.application.dto.invoice;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -39,6 +40,10 @@ public class InvoiceRequestDTO {
 
     @JsonProperty("RelatedDocumentNumber")
     private String relatedDocumentNumber;
+
+    @JsonProperty("FileUrl")
+    @JsonAlias({"fileUrl", "file_url", "fileurl"})
+    private String fileUrl;
 
     @JsonProperty("Amount")
     private String amount; // keep as string input, we'll parse to BigDecimal

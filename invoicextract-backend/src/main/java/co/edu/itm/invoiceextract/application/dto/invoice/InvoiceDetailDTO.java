@@ -35,6 +35,9 @@ public class InvoiceDetailDTO {
     @Schema(description = "Sender business name", example = "Supplier Inc")
     private String senderBusinessName;
 
+    @Schema(description = "Original file URL", example = "https://s3.amazonaws.com/bucket/invoices/INV-2024-001.pdf")
+    private String fileUrl;
+
     @Schema(description = "Total amount", example = "1500.75")
     private BigDecimal amount;
 
