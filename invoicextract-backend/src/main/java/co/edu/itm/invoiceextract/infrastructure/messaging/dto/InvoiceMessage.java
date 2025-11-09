@@ -13,7 +13,8 @@ public class InvoiceMessage {
     private String email;
     private LocalDateTime date;
     private InvoiceStatus status;
-    private String fileUrl;
+    private String invoicePathPDF;
+    private String invoicePathXML;
     
     // Core invoice fields matching InvoiceRequestDTO
     private String documentType;

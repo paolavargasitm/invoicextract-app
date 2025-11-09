@@ -389,7 +389,7 @@ function Modal({ open, onClose, children }: { open: boolean, onClose: () => void
 
 function InvoiceDetailModal({ open, row, onClose }: { open: boolean, row: InvoiceRow | null, onClose: () => void }) {
   if (!open || !row) return null;
-  const { invoice, invoiceStatus, approveInvoice, rejectInvoice, downloadPDF, formattedAmount, error, clearError, success, clearSuccess, items, pdfUrl } = useInvoiceDetail({
+  const { invoice, invoiceStatus, approveInvoice, rejectInvoice, downloadPDF, downloadXML, formattedAmount, error, clearError, success, clearSuccess, items, pdfUrl, xmlUrl } = useInvoiceDetail({
     id: row.id,
     provider: row.provider,
     date: row.date,
@@ -425,10 +425,12 @@ function InvoiceDetailModal({ open, row, onClose }: { open: boolean, row: Invoic
           formattedAmount={formattedAmount}
           status={invoiceStatus}
           pdfUrl={pdfUrl}
+          xmlUrl={xmlUrl}
           items={items as any}
           onApprove={async () => { await approveInvoice(); /* keep modal open */ }}
           onReject={async () => { await rejectInvoice(); /* keep modal open */ }}
           onDownload={downloadPDF}
+          onDownloadXml={downloadXML}
           onBack={handleBack}
         />
       </div>

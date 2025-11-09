@@ -13,6 +13,7 @@ const InvoiceDetailPage: React.FC = () => {
         amount: number;
         status: "Aprobada" | "Rechazada" | "Pendiente";
         pdfUrl?: string;
+        xmlUrl?: string;
     }>;
 
     const {
@@ -21,6 +22,7 @@ const InvoiceDetailPage: React.FC = () => {
         approveInvoice,
         rejectInvoice,
         downloadPDF,
+        downloadXML,
         goBack,
         formattedAmount,
     } = useInvoiceDetail({
@@ -30,6 +32,7 @@ const InvoiceDetailPage: React.FC = () => {
         amount: typeof state.amount === 'number' ? state.amount : 0,
         status: state.status || "Pendiente",
         pdfUrl: state.pdfUrl,
+        xmlUrl: state.xmlUrl,
     });
 
     return (
@@ -40,9 +43,11 @@ const InvoiceDetailPage: React.FC = () => {
             formattedAmount={formattedAmount}
             status={invoiceStatus}
             pdfUrl={invoice.pdfUrl}
+            xmlUrl={invoice.xmlUrl}
             onApprove={approveInvoice}
             onReject={rejectInvoice}
             onDownload={downloadPDF}
+            onDownloadXml={downloadXML}
             onBack={goBack}
         />
     );

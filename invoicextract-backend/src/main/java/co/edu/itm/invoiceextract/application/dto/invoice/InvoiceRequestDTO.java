@@ -42,9 +42,13 @@ public class InvoiceRequestDTO {
     @JsonProperty("RelatedDocumentNumber")
     private String relatedDocumentNumber;
 
-    @JsonProperty("FileUrl")
-    @JsonAlias({"fileUrl", "file_url", "fileurl"})
-    private String fileUrl;
+    @JsonProperty("InvoicePathPDF")
+    @JsonAlias({"invoicePathPDF", "invoice_path_pdf", "FileUrl", "fileUrl", "file_url", "fileurl"})
+    private String invoicePathPDF;
+
+    @JsonProperty("InvoicePathXML")
+    @JsonAlias({"invoicePathXML", "invoice_path_xml"})
+    private String invoicePathXML;
 
     @JsonProperty("Amount")
     private String amount; // keep as string input, we'll parse to BigDecimal

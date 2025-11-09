@@ -10,7 +10,8 @@ export type Invoice = {
     date: string;
     amount: number;
     status?: InvoiceStatus;
-    pdfUrl?: string;
+    pdfUrl?: string; // maps to backend invoicePathPDF
+    xmlUrl?: string; // maps to backend invoicePathXML
 };
 
 export type InvoiceItem = {
@@ -40,6 +41,7 @@ export function useInvoiceDetail(initial: Invoice) {
     const [success, setSuccess] = useState<null | { message: string }>(null);
     const [items, setItems] = useState<InvoiceItem[]>([]);
     const [detailPdfUrl, setDetailPdfUrl] = useState<string | undefined>(undefined);
+    const [detailXmlUrl, setDetailXmlUrl] = useState<string | undefined>(undefined);
 
     const changeStatus = async (newStatus: InvoiceStatus): Promise<boolean> => {
         setLoading(true);
@@ -89,6 +91,27 @@ export function useInvoiceDetail(initial: Invoice) {
         }
     };
 
+    const downloadXML = async (): Promise<boolean> => {
+        const effectiveXml = detailXmlUrl || initial.xmlUrl;
+        if (effectiveXml) {
+            try {
+                const link = document.createElement("a");
+                link.href = effectiveXml;
+                link.download = `factura-${initial.id}.xml`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return true;
+            } catch (err) {
+                window.open(effectiveXml, "_blank", "noopener,noreferrer");
+                return true;
+            }
+        } else {
+            setError({ message: "No hay XML disponible para esta factura" });
+            return false;
+        }
+    };
+
     const goBack = () => {
         try {
             navigate(-1);
@@ -109,7 +132,7 @@ export function useInvoiceDetail(initial: Invoice) {
         }
     }, [initial.amount]);
 
-    // Load detailed data (items, fileUrl) once per invoice id
+    // Load detailed data (items, invoicePathPDF/XML) once per invoice id
     useEffect(() => {
         let ignore = false;
         (async () => {
@@ -129,7 +152,11 @@ export function useInvoiceDetail(initial: Invoice) {
                         }));
                         setItems(normalized);
                     }
-                    if (detail?.fileUrl) setDetailPdfUrl(detail.fileUrl);
+                    // Backend response compatibility: prefer new names
+                    const pdf = detail?.invoicePathPDF ?? detail?.InvoicePathPDF ?? detail?.pdfUrl ?? detail?.fileUrl;
+                    const xml = detail?.invoicePathXML ?? detail?.InvoicePathXML ?? detail?.xmlUrl;
+                    if (pdf) setDetailPdfUrl(pdf);
+                    if (xml) setDetailXmlUrl(xml);
                 }
             } catch (err: any) {
                 // silent detail load failure to avoid blocking actions
@@ -154,5 +181,7 @@ export function useInvoiceDetail(initial: Invoice) {
         clearSuccess: () => setSuccess(null),
         items,
         pdfUrl: detailPdfUrl || initial.pdfUrl,
+        xmlUrl: detailXmlUrl || initial.xmlUrl,
+        downloadXML,
     };
 }

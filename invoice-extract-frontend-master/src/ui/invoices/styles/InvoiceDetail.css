@@ -24,6 +24,9 @@
     box-shadow: var(--shadow);
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
 }
 
 .invd__title {
@@ -65,6 +68,13 @@
     border-radius: 6px;
 }
 
+/* Scrollable content area so actions remain visible */
+.invd__content-scroll {
+    overflow: auto;
+    padding-bottom: 8px;
+    flex: 1;
+}
+
 .invd__pdf-placeholder {
     height: 150px;
     background: #e9ecef;
@@ -83,6 +93,16 @@
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+}
+
+/* Keep action buttons visible while scrolling */
+.invd__actions--sticky {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg);
+    padding-top: 12px;
+    padding-bottom: 8px;
+    border-top: 1px solid var(--border);
 }
 
 .invd__btn {

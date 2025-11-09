@@ -205,7 +205,8 @@ public class ManageInvoiceUseCase {
         existingInvoice.setSenderTaxId(updatedData.getSenderTaxId());
         existingInvoice.setSenderTaxIdWithoutCheckDigit(updatedData.getSenderTaxIdWithoutCheckDigit());
         existingInvoice.setSenderBusinessName(updatedData.getSenderBusinessName());
-        existingInvoice.setFileUrl(updatedData.getFileUrl());
+        existingInvoice.setInvoicePathPDF(updatedData.getInvoicePathPDF());
+        existingInvoice.setInvoicePathXML(updatedData.getInvoicePathXML());
         existingInvoice.setRelatedDocumentNumber(updatedData.getRelatedDocumentNumber());
         existingInvoice.setAmount(updatedData.getAmount());
         existingInvoice.setIssueDate(updatedData.getIssueDate());

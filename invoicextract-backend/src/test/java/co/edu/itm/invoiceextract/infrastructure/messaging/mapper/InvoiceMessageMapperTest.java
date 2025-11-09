@@ -47,7 +47,8 @@ class InvoiceMessageMapperTest {
         assertThat(msg.getDocumentNumber()).isEqualTo("INV-200");
         assertThat(msg.getStatus()).isEqualTo(InvoiceStatus.PENDING);
         assertThat(msg.getDate()).isNotNull();
-        assertThat(msg.getFileUrl()).isNull();
+        assertThat(msg.getInvoicePathPDF()).isNull();
+        assertThat(msg.getInvoicePathXML()).isNull();
         assertThat(msg.getEmail()).isNull();
         assertThat(msg.getInvoiceItem()).isNotNull();
         assertThat(msg.getInvoiceItem().getDescription()).isEqualTo("Item");
