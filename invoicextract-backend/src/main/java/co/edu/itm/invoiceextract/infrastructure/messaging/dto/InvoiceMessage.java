@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class InvoiceMessage {
@@ -30,4 +31,5 @@ public class InvoiceMessage {
     
     // Invoice item details
     private InvoiceItemMessage invoiceItem;
+    private List<InvoiceItemMessage> invoiceItems;
 }

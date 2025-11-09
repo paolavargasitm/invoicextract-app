@@ -8,6 +8,7 @@ export type InvoiceDetailViewProps = {
     formattedAmount: string;
     status: string;
     pdfUrl?: string;
+    items?: Array<{ itemCode?: string; description?: string; quantity?: number; unit?: string; subtotal?: number | string; total?: number | string; }>;
     onApprove: () => void;
     onReject: () => void;
     onDownload: () => void;
@@ -28,6 +29,7 @@ const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({
     formattedAmount,
     status,
     pdfUrl,
+    items = [],
     onApprove,
     onReject,
     onDownload,
@@ -62,6 +64,38 @@ const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({
                     <div className="invd__pdf-placeholder">[Visor PDF - Visualización previa]</div>
                 )}
             </div>
+
+            {Array.isArray(items) && items.length > 0 && (
+                <div style={{ marginTop: 16 }}>
+                    <h3 className="invd__actions-title">Items de la Factura</h3>
+                    <div style={{ overflow: "auto" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                            <thead>
+                                <tr style={{ textAlign: "left", color: "var(--muted)" }}>
+                                    <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Código</th>
+                                    <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Descripción</th>
+                                    <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Cantidad</th>
+                                    <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Unidad</th>
+                                    <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Subtotal</th>
+                                    <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {items.map((it, idx) => (
+                                    <tr key={idx} style={{ background: idx % 2 === 0 ? "var(--card)" : "var(--bg)" }}>
+                                        <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{it.itemCode || "—"}</td>
+                                        <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{it.description || "—"}</td>
+                                        <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{it.quantity ?? "—"}</td>
+                                        <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{it.unit || "—"}</td>
+                                        <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{String(it.subtotal ?? "—")}</td>
+                                        <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{String(it.total ?? "—")}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
 
             <h3 className="invd__actions-title">Acciones de Revisión</h3>
             <div className="invd__actions">

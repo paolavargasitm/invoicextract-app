@@ -27,6 +27,7 @@ public interface InvoiceMessageMapper {
     @Mapping(target = "issueDate", source = "issueDate")
     @Mapping(target = "dueDate", source = "dueDate")
     @Mapping(target = "invoiceItem", source = "invoiceItem")
+    @Mapping(target = "invoiceItems", source = "invoiceItems")
     InvoiceMessage toMessage(InvoiceRequestDTO dto);
 
     // Direct mapping back to DTO - all fields map 1:1
@@ -43,6 +44,7 @@ public interface InvoiceMessageMapper {
     @Mapping(target = "issueDate", source = "issueDate")
     @Mapping(target = "dueDate", source = "dueDate")
     @Mapping(target = "invoiceItem", source = "invoiceItem")
+    @Mapping(target = "invoiceItems", source = "invoiceItems")
     InvoiceRequestDTO toDto(InvoiceMessage message);
 
     // Direct mapping for invoice items

@@ -18,8 +18,7 @@ type InvoiceRow = {
 
 export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  // Filtros (placeholder)
-  const [userOrEmail, setUserOrEmail] = useState("");
+  // Filtros
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | "APPROVED" | "REJECTED" | "PENDING">("");
@@ -89,14 +88,12 @@ export default function DashboardPage() {
   // Initialize filters from URL params once
   useEffect(() => {
     try {
-      const u = searchParams.get('user') || "";
       const f = searchParams.get('from') || "";
       const t = searchParams.get('to') || "";
       const s = (searchParams.get('status') || "") as any;
       const sSender = searchParams.get('senderTaxId') || "";
       const sReceiver = searchParams.get('receiverTaxId') || "";
-      if (u || f || t || s || sSender || sReceiver) {
-        setUserOrEmail(u);
+      if (f || t || s || sSender || sReceiver) {
         setFrom(f);
         setTo(t);
         setStatusFilter(s);
@@ -113,7 +110,6 @@ export default function DashboardPage() {
   useEffect(() => {
     if (firstLoadRef.current) { firstLoadRef.current = false; return; }
     const params = new URLSearchParams();
-    if (userOrEmail) params.set('user', userOrEmail);
     if (from) params.set('from', from);
     if (to) params.set('to', to);
     if (statusFilter) params.set('status', statusFilter);
@@ -122,7 +118,7 @@ export default function DashboardPage() {
     setSearchParams(params);
     const id = window.setTimeout(() => { loadInvoices(); }, 350);
     return () => window.clearTimeout(id);
-  }, [userOrEmail, from, to, statusFilter, senderTaxId, receiverTaxId]);
+  }, [from, to, statusFilter, senderTaxId, receiverTaxId]);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -147,7 +143,6 @@ export default function DashboardPage() {
 
   const onSearch = () => {
     const params = new URLSearchParams();
-    if (userOrEmail) params.set('user', userOrEmail);
     if (from) params.set('from', from);
     if (to) params.set('to', to);
     if (statusFilter) params.set('status', statusFilter);
@@ -157,7 +152,6 @@ export default function DashboardPage() {
     loadInvoices();
   };
   const onClearFilters = () => {
-    setUserOrEmail("");
     setFrom("");
     setTo("");
     setStatusFilter("");
@@ -233,18 +227,32 @@ export default function DashboardPage() {
     <div style={{ display: "grid", gap: 16 }}>
       <section style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: 16 }}>
         <h2 style={{ marginTop: 0, color: "var(--text)" }}>Dashboard General</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, alignItems: "end" }}>
-          <input placeholder="ID usuario / Correo" value={userOrEmail} onChange={e => setUserOrEmail(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
-          <input type="date" value={from} onChange={e => setFrom(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
-          <input type="date" value={to} onChange={e => setTo(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }}>
-            <option value="">Todos los estados</option>
-            <option value="PENDING">Pendiente</option>
-            <option value="APPROVED">Aprobada</option>
-            <option value="REJECTED">Rechazada</option>
-          </select>
-          <input placeholder="Sender Tax ID" value={senderTaxId} onChange={e => setSenderTaxId(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
-          <input placeholder="Receiver Tax ID" value={receiverTaxId} onChange={e => setReceiverTaxId(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, alignItems: "end" }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>Creación desde</label>
+            <input aria-label="Fecha de creación desde" type="date" value={from} onChange={e => setFrom(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>Creación hasta</label>
+            <input aria-label="Fecha de creación hasta" type="date" value={to} onChange={e => setTo(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>Estado</label>
+            <select aria-label="Estado" value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }}>
+              <option value="">Todos los estados</option>
+              <option value="PENDING">Pendiente</option>
+              <option value="APPROVED">Aprobada</option>
+              <option value="REJECTED">Rechazada</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>NIT Emisor</label>
+            <input aria-label="NIT Emisor" placeholder="Sender Tax ID" value={senderTaxId} onChange={e => setSenderTaxId(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>NIT Receptor</label>
+            <input aria-label="NIT Receptor" placeholder="Receiver Tax ID" value={receiverTaxId} onChange={e => setReceiverTaxId(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+          </div>
           <button type="button" onClick={() => { console.debug('dashboard: open export modal'); setShowExport(true); }} style={{ background: "#16a34a", color: "#fff", border: 0, borderRadius: 8, padding: "10px 12px" }}>Exportar data a ERP</button>
         </div>
         <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
@@ -284,7 +292,6 @@ export default function DashboardPage() {
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Fecha</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Proveedor</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Monto</th>
-                <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>ERP</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Cliente</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Estado</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Acciones</th>
@@ -292,7 +299,7 @@ export default function DashboardPage() {
             </thead>
             <tbody>
               {loadingInvoices && (
-                <tr><td colSpan={8} style={{ color: 'var(--muted)', padding: 8, borderTop: `1px solid var(--border)` }}>Cargando…</td></tr>
+                <tr><td colSpan={7} style={{ color: 'var(--muted)', padding: 8, borderTop: `1px solid var(--border)` }}>Cargando…</td></tr>
               )}
               {!loadingInvoices && !errorInvoices && rows.map((row, idx) => (
                 <tr key={row.id} style={{ background: idx % 2 === 0 ? "var(--card)" : "var(--bg)" }}>
@@ -300,7 +307,6 @@ export default function DashboardPage() {
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.date}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.provider}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{fmtCurrency(row.amount)}</td>
-                  <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.erp || '—'}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.customer || '—'}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>
                     {row.status === "Aprobada" && <Badge text="Aprobada" tone="green" />}
@@ -320,7 +326,7 @@ export default function DashboardPage() {
               ))}
               {!loadingInvoices && !errorInvoices && rows.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ color: 'var(--muted)', padding: 8, borderTop: `1px solid var(--border)` }}>Sin resultados</td>
+                  <td colSpan={7} style={{ color: 'var(--muted)', padding: 8, borderTop: `1px solid var(--border)` }}>Sin resultados</td>
                 </tr>
               )}
             </tbody>
@@ -383,7 +389,7 @@ function Modal({ open, onClose, children }: { open: boolean, onClose: () => void
 
 function InvoiceDetailModal({ open, row, onClose }: { open: boolean, row: InvoiceRow | null, onClose: () => void }) {
   if (!open || !row) return null;
-  const { invoice, invoiceStatus, approveInvoice, rejectInvoice, downloadPDF, formattedAmount, error, clearError, success, clearSuccess } = useInvoiceDetail({
+  const { invoice, invoiceStatus, approveInvoice, rejectInvoice, downloadPDF, formattedAmount, error, clearError, success, clearSuccess, items, pdfUrl } = useInvoiceDetail({
     id: row.id,
     provider: row.provider,
     date: row.date,
@@ -418,7 +424,8 @@ function InvoiceDetailModal({ open, row, onClose }: { open: boolean, row: Invoic
           date={invoice.date}
           formattedAmount={formattedAmount}
           status={invoiceStatus}
-          pdfUrl={invoice.pdfUrl}
+          pdfUrl={pdfUrl}
+          items={items as any}
           onApprove={async () => { await approveInvoice(); /* keep modal open */ }}
           onReject={async () => { await rejectInvoice(); /* keep modal open */ }}
           onDownload={downloadPDF}

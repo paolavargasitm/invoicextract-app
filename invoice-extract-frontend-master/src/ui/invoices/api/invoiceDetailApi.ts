@@ -27,4 +27,5 @@ export const invoicesApi = {
         request(`/api/invoices/${id}/status?status=${encodeURIComponent(status)}`, {
             method: "PUT",
         }),
+    getById: (id: number | string) => request(`/api/invoices/${id}`),
 };
