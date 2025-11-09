@@ -10,7 +10,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface InvoiceMessageMapper {
 
-    @Mapping(target = "fileUrl", ignore = true)
+    @Mapping(target = "fileUrl", source = "fileUrl")
     @Mapping(target = "email", ignore = true)
     @Mapping(target = "status", constant = "PENDING")
     @Mapping(target = "date", expression = "java(java.time.LocalDateTime.now())")

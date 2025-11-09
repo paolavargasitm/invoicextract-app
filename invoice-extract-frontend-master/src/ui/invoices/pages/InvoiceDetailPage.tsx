@@ -1,10 +1,20 @@
 import React from "react";
 import InvoiceDetailView from "../components/InvoiceDetailView";
 import { useInvoiceDetail } from "../hooks/useInvoiceDetail";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 const InvoiceDetailPage: React.FC = () => {
     const { id: routeId } = useParams<{ id: string }>();
+    const location = useLocation();
+    const state = (location.state || {}) as Partial<{
+        id: string;
+        provider: string;
+        date: string;
+        amount: number;
+        status: "Aprobada" | "Rechazada" | "Pendiente";
+        pdfUrl?: string;
+    }>;
+
     const {
         invoice,
         invoiceStatus,
@@ -14,11 +24,12 @@ const InvoiceDetailPage: React.FC = () => {
         goBack,
         formattedAmount,
     } = useInvoiceDetail({
-        id: routeId || "FCT-001",
-        provider: "Grupo Éxito",
-        date: "2025-04-21",
-        amount: 1_200_000,
-        status: "Aprobada",
+        id: routeId || state.id || "FCT-001",
+        provider: state.provider || "—",
+        date: state.date || new Date().toISOString().slice(0, 10),
+        amount: typeof state.amount === 'number' ? state.amount : 0,
+        status: state.status || "Pendiente",
+        pdfUrl: state.pdfUrl,
     });
 
     return (

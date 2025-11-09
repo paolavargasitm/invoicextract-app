@@ -38,6 +38,9 @@ const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({
 
     return (
         <div className="invd__container">
+            <button className="invd__btn invd__btn--back invd__btn--back-top" onClick={onBack}>
+                Volver
+            </button>
             <h2 className="invd__title">Detalle de Factura: {id}</h2>
 
             <p><strong>Proveedor:</strong> {provider}</p>
@@ -68,11 +71,8 @@ const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({
                 <button className="invd__btn invd__btn--reject" onClick={onReject}>
                     Rechazar Factura
                 </button>
-                <button className="invd__btn invd__btn--download" onClick={onDownload}>
+                <button className="invd__btn invd__btn--download" onClick={() => { if (pdfUrl) { window.open(pdfUrl, '_blank', 'noopener,noreferrer'); } else { onDownload(); } }}>
                     Descargar PDF
-                </button>
-                <button className="invd__btn invd__btn--back" onClick={onBack}>
-                    Volver
                 </button>
             </div>
         </div>

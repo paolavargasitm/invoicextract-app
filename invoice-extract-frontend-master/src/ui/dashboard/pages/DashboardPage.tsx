@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { authHeader } from "../../../auth/keycloak";
+import ErrorBanner from "../../../components/ErrorBanner";
 import InvoiceDetailView from "../../invoices/components/InvoiceDetailView";
 import { useInvoiceDetail } from "../../invoices/hooks/useInvoiceDetail";
-import ErrorBanner from "../../../components/ErrorBanner";
 
 type InvoiceRow = {
   id: string;
@@ -12,9 +13,11 @@ type InvoiceRow = {
   status: "Aprobada" | "Rechazada" | "Pendiente";
   erp?: string;
   customer?: string;
+  pdfUrl?: string;
 };
 
 export default function DashboardPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   // Filtros (placeholder)
   const [userOrEmail, setUserOrEmail] = useState("");
   const [from, setFrom] = useState("");
@@ -22,6 +25,7 @@ export default function DashboardPage() {
   const [statusFilter, setStatusFilter] = useState<"" | "APPROVED" | "REJECTED" | "PENDING">("");
   const [senderTaxId, setSenderTaxId] = useState<string>("");
   const [receiverTaxId, setReceiverTaxId] = useState<string>("");
+  const firstLoadRef = useRef(true);
   // Invoices state
   const [rows, setRows] = useState<InvoiceRow[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
@@ -35,7 +39,7 @@ export default function DashboardPage() {
   const [erpOptions, setErpOptions] = useState<string[]>(["SAP"]);
   // Detail modal state
   const [showDetail, setShowDetail] = useState(false);
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const [selectedRow, setSelectedRow] = useState<InvoiceRow | null>(null);
 
   const backendBase = () => (import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:8080/invoicextract");
   // Load invoices from API (fallback-friendly mapping)
@@ -54,7 +58,8 @@ export default function DashboardPage() {
     const amountNum = Number(inv?.amount ?? inv?.total ?? inv?.totalAmount ?? inv?.grandTotal ?? 0);
     const erp = inv?.erp || inv?.erpName || inv?.system || inv?.sourceErp || undefined;
     const customer = inv?.customer || inv?.customerName || inv?.buyerBusinessName || inv?.receiverBusinessName || undefined;
-    return { id: String(id), date, provider: String(provider), amount: isNaN(amountNum) ? 0 : amountNum, status: mapStatus(inv?.status), erp, customer };
+    const pdfUrl = inv?.file_url || inv?.fileUrl || inv?.pdfUrl || undefined;
+    return { id: String(id), date, provider: String(provider), amount: isNaN(amountNum) ? 0 : amountNum, status: mapStatus(inv?.status), erp, customer, pdfUrl };
   };
   const loadInvoices = async () => {
     setLoadingInvoices(true); setErrorInvoices("");
@@ -81,7 +86,43 @@ export default function DashboardPage() {
     } finally { setLoadingInvoices(false); }
   };
 
-  useEffect(() => { loadInvoices(); /* eslint-disable-next-line */ }, []);
+  // Initialize filters from URL params once
+  useEffect(() => {
+    try {
+      const u = searchParams.get('user') || "";
+      const f = searchParams.get('from') || "";
+      const t = searchParams.get('to') || "";
+      const s = (searchParams.get('status') || "") as any;
+      const sSender = searchParams.get('senderTaxId') || "";
+      const sReceiver = searchParams.get('receiverTaxId') || "";
+      if (u || f || t || s || sSender || sReceiver) {
+        setUserOrEmail(u);
+        setFrom(f);
+        setTo(t);
+        setStatusFilter(s);
+        setSenderTaxId(sSender);
+        setReceiverTaxId(sReceiver);
+      }
+    } catch {}
+    // then load
+    loadInvoices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-sync filters -> URL + auto reload (debounced)
+  useEffect(() => {
+    if (firstLoadRef.current) { firstLoadRef.current = false; return; }
+    const params = new URLSearchParams();
+    if (userOrEmail) params.set('user', userOrEmail);
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    if (statusFilter) params.set('status', statusFilter);
+    if (senderTaxId) params.set('senderTaxId', senderTaxId);
+    if (receiverTaxId) params.set('receiverTaxId', receiverTaxId);
+    setSearchParams(params);
+    const id = window.setTimeout(() => { loadInvoices(); }, 350);
+    return () => window.clearTimeout(id);
+  }, [userOrEmail, from, to, statusFilter, senderTaxId, receiverTaxId]);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -104,7 +145,27 @@ export default function DashboardPage() {
     }}>{text}</span>
   );
 
-  const onSearch = () => { loadInvoices(); };
+  const onSearch = () => {
+    const params = new URLSearchParams();
+    if (userOrEmail) params.set('user', userOrEmail);
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    if (statusFilter) params.set('status', statusFilter);
+    if (senderTaxId) params.set('senderTaxId', senderTaxId);
+    if (receiverTaxId) params.set('receiverTaxId', receiverTaxId);
+    setSearchParams(params);
+    loadInvoices();
+  };
+  const onClearFilters = () => {
+    setUserOrEmail("");
+    setFrom("");
+    setTo("");
+    setStatusFilter("");
+    setSenderTaxId("");
+    setReceiverTaxId("");
+    setSearchParams(new URLSearchParams());
+    loadInvoices();
+  };
 
   const mappingsBase = () => (import.meta.env.VITE_MAPPINGS_BASE_URL || "http://localhost:8082/invoice-mapping");
 
@@ -186,8 +247,9 @@ export default function DashboardPage() {
           <input placeholder="Receiver Tax ID" value={receiverTaxId} onChange={e => setReceiverTaxId(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
           <button type="button" onClick={() => { console.debug('dashboard: open export modal'); setShowExport(true); }} style={{ background: "#16a34a", color: "#fff", border: 0, borderRadius: 8, padding: "10px 12px" }}>Exportar data a ERP</button>
         </div>
-        <div style={{ marginTop: 12 }}>
+        <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
           <button onClick={onSearch} style={{ background: "var(--brand)", color: "#fff", border: 0, borderRadius: 8, padding: "10px 16px" }}>Buscar</button>
+          <button onClick={onClearFilters} style={{ background: '#e2e8f0', color: '#0f172a', border: 0, borderRadius: 8, padding: '10px 16px' }}>Limpiar filtros</button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
           <div style={{ background: "#bfdbfe", borderRadius: 12, padding: 14 }}>
@@ -246,7 +308,13 @@ export default function DashboardPage() {
                     {row.status === "Pendiente" && <Badge text="Pendiente" tone="amber" />}
                   </td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>
-                    <button type="button" onClick={() => { setDetailId(row.id); setShowDetail(true); }} style={{ background: 'transparent', color: 'var(--brand)', border: 0, padding: 0, cursor: 'pointer' }}>Ver Detalle</button>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedRow(row); setShowDetail(true); }}
+                      style={{ background: 'transparent', color: 'var(--brand)', border: 0, padding: 0, cursor: 'pointer' }}
+                    >
+                      Ver Detalle
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -288,12 +356,11 @@ export default function DashboardPage() {
           </div>
         </div>
       </Modal>
-
-      {/* Detalle de factura en modal */}
-      <InvoiceDetailModal open={showDetail} id={detailId} onClose={() => {
-        setShowDetail(false);
-        // refrescar lista: aquí conectaremos a API; por ahora, no-op
-      }} />
+      <InvoiceDetailModal
+        open={showDetail}
+        row={selectedRow}
+        onClose={() => { setShowDetail(false); loadInvoices(); }}
+      />
     </div>
   );
 }
@@ -314,21 +381,37 @@ function Modal({ open, onClose, children }: { open: boolean, onClose: () => void
   );
 }
 
-function InvoiceDetailModal({ open, id, onClose }: { open: boolean, id: string | null, onClose: () => void }) {
-  if (!open || !id) return null;
-  const { invoice, invoiceStatus, approveInvoice, rejectInvoice, downloadPDF, formattedAmount } = useInvoiceDetail({
-    id,
-    provider: "—",
-    date: new Date().toISOString().slice(0,10),
-    amount: 0,
-    status: "Pendiente",
-  });
-  const handleBack = () => {
-    onClose();
-  };
+function InvoiceDetailModal({ open, row, onClose }: { open: boolean, row: InvoiceRow | null, onClose: () => void }) {
+  if (!open || !row) return null;
+  const { invoice, invoiceStatus, approveInvoice, rejectInvoice, downloadPDF, formattedAmount, error, clearError, success, clearSuccess } = useInvoiceDetail({
+    id: row.id,
+    provider: row.provider,
+    date: row.date,
+    amount: row.amount,
+    status: row.status,
+    pdfUrl: row.pdfUrl,
+  } as any);
+  const handleBack = () => { onClose(); };
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.5)', display: 'grid', placeItems: 'center', zIndex: 50 }}>
-      <div style={{ background: 'var(--card)', color: 'var(--text)', borderRadius: 12, border: '1px solid var(--border)', width: 'min(980px, 96vw)', padding: 16 }}>
+      <div style={{ background: 'var(--card)', color: 'var(--text)', borderRadius: 12, border: '1px solid var(--border)', width: 'min(900px, 92vw)', padding: 14 }}>
+        {error && <ErrorBanner message={error.message} details={error.details} onClose={clearError} />}
+        {success && (
+          <div style={{
+            background: '#ecfdf5',
+            color: '#065f46',
+            padding: 10,
+            borderRadius: 8,
+            border: '1px solid #a7f3d0',
+            marginBottom: 10,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <span>{success.message}</span>
+            <button onClick={clearSuccess} style={{ background: 'transparent', border: 0, color: '#065f46', cursor: 'pointer' }}>✕</button>
+          </div>
+        )}
         <InvoiceDetailView
           id={invoice.id}
           provider={invoice.provider}
@@ -336,8 +419,8 @@ function InvoiceDetailModal({ open, id, onClose }: { open: boolean, id: string |
           formattedAmount={formattedAmount}
           status={invoiceStatus}
           pdfUrl={invoice.pdfUrl}
-          onApprove={async () => { await approveInvoice(); onClose(); }}
-          onReject={async () => { await rejectInvoice(); onClose(); }}
+          onApprove={async () => { await approveInvoice(); /* keep modal open */ }}
+          onReject={async () => { await rejectInvoice(); /* keep modal open */ }}
           onDownload={downloadPDF}
           onBack={handleBack}
         />

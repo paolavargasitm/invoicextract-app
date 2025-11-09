@@ -37,6 +37,7 @@ public class InvoiceRepositoryAdapter implements InvoiceRepositoryPort {
                     .senderTaxId(rs.getString("sender_tax_id"))
                     .senderTaxIdWithoutCheckDigit(rs.getString("sender_tax_id_without_check_digit"))
                     .senderBusinessName(rs.getString("sender_business_name"))
+                    .fileUrl(rs.getString("file_url"))
                     .relatedDocumentNumber(rs.getString("related_document_number"))
                     .amount(rs.getBigDecimal("amount"))
                     .issueDate(rs.getObject("issue_date", LocalDate.class))
@@ -70,7 +71,7 @@ public class InvoiceRepositoryAdapter implements InvoiceRepositoryPort {
     @Override
     public List<Invoice> findApproved() {
         String sql = "SELECT id, document_type, document_number, receiver_tax_id, receiver_tax_id_without_check_digit, " +
-                "receiver_business_name, sender_tax_id, sender_tax_id_without_check_digit, sender_business_name, " +
+                "receiver_business_name, sender_tax_id, sender_tax_id_without_check_digit, sender_business_name, file_url, " +
                 "related_document_number, amount, issue_date, due_date, status, created_date, modified_date, created_by, modified_by FROM invoices WHERE status = 'APPROVED'";
         List<Invoice> invoices = jdbc.query(sql, INVOICE_MAPPER);
 

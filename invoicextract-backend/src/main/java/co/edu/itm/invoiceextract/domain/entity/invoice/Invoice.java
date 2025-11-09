@@ -46,6 +46,9 @@ public class Invoice extends AuditableEntity {
     @Column(name = "sender_business_name", length = 255)
     private String senderBusinessName;
 
+    @Column(name = "file_url", length = 1024)
+    private String fileUrl;
+
     @Column(name = "related_document_number", length = 100)
     private String relatedDocumentNumber;
 
