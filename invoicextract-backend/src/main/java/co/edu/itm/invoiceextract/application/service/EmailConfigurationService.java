@@ -29,16 +29,13 @@ public class EmailConfigurationService {
             repository.save(activeConfig);
         }
 
-        // Generate a new encryption key for this configuration
-        String encryptionKey = encryptionService.generateEncryptionKey();
-        
         // Create and save the new active configuration
-        String encryptedPassword = encryptionService.encrypt(plainPassword, encryptionKey);
+        String encryptedPassword = encryptionService.encrypt(plainPassword);
         
         EmailConfiguration newConfig = new EmailConfiguration();
         newConfig.setUsername(username);
         newConfig.setPassword(encryptedPassword);
-        newConfig.setEncryptionKey(encryptionKey);
+        newConfig.setEncryptionKey(encryptionService.generateEncryptionKey());
         newConfig.setStatus(ConfigurationStatus.ACTIVE);
 
         return repository.save(newConfig);

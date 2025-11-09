@@ -22,9 +22,9 @@ class EncryptionServiceTest {
     @DisplayName("should_encrypt_and_decrypt_with_config_key")
     void should_encrypt_and_decrypt_with_config_key() throws Exception {
         String configKey = service.generateEncryptionKey();
-        String plain = "s3cr3t-P@ss";
+        String plain = "bfnx ygve bpep mjac";
 
-        String enc = service.encrypt(plain, configKey);
+        String enc = service.encrypt(plain);
         String dec = service.decrypt(enc, configKey);
 
         assertThat(enc).isNotBlank();
