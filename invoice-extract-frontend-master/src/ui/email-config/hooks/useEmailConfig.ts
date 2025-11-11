@@ -18,6 +18,7 @@ export function useEmailConfig(opts?: { onValidate?: ValidateFn; onSave?: SaveFn
     const [activeUsername, setActiveUsername] = useState<string>("");
     const [activeConfiguredAt, setActiveConfiguredAt] = useState<string>("");
     const [successMessage, setSuccessMessage] = useState<string>("");
+    const [errorMessage, setErrorMessage] = useState<string>("");
 
     const isValidEmail = (value: string): boolean => {
         const v = value.trim();
@@ -38,8 +39,16 @@ export function useEmailConfig(opts?: { onValidate?: ValidateFn; onSave?: SaveFn
         return `${parts[0]}@${parts[1].toLowerCase()}`;
     };
 
-    const handleEmail = (e: ChangeEvent<HTMLInputElement>) => setEmail(normalizeEmail(e.target.value));
-    const handlePassword = (e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value);
+    const handleEmail = (e: ChangeEvent<HTMLInputElement>) => {
+        setEmail(normalizeEmail(e.target.value));
+        if (errorMessage) setErrorMessage("");
+        if (successMessage) setSuccessMessage("");
+    };
+    const handlePassword = (e: ChangeEvent<HTMLInputElement>) => {
+        setPassword(e.target.value);
+        if (errorMessage) setErrorMessage("");
+        if (successMessage) setSuccessMessage("");
+    };
 
     const isComplete = isValidEmail(email) && password.trim() !== "";
 
@@ -71,11 +80,11 @@ export function useEmailConfig(opts?: { onValidate?: ValidateFn; onSave?: SaveFn
 
     const guardarCredenciales = async () => {
         if (!email.trim() || !password.trim()) {
-            alert("Por favor, completa ambos campos antes de guardar.");
+            setErrorMessage("Por favor, completa ambos campos antes de guardar.");
             return;
         }
         if (!isValidEmail(email)) {
-            alert("Correo inválido. Verifica el formato (usuario@dominio).");
+            setErrorMessage("Correo inválido. Verifica el formato (usuario@dominio).");
             return;
         }
         setLoading("saving");
@@ -90,9 +99,16 @@ export function useEmailConfig(opts?: { onValidate?: ValidateFn; onSave?: SaveFn
                 });
                 if (!resp.ok) {
                     const txt = await resp.text();
-                    throw new Error(txt || "Error al guardar credenciales");
+                    if (resp.status === 409) {
+                        // Forzar mensaje en español, independiente del texto del backend
+                        setErrorMessage("El correo ya existe. Por favor usa otro.");
+                        return;
+                    }
+                    setErrorMessage(txt || "Error al guardar credenciales");
+                    return;
                 }
                 setSuccessMessage("Credenciales guardadas correctamente.");
+                setErrorMessage("");
                 // limpiar formulario
                 setEmail("");
                 setPassword("");
@@ -150,6 +166,7 @@ export function useEmailConfig(opts?: { onValidate?: ValidateFn; onSave?: SaveFn
         activeUsername,
         activeConfiguredAt,
         successMessage,
+        errorMessage,
         refreshActiveEmail: fetchActiveEmail,
     };
 }

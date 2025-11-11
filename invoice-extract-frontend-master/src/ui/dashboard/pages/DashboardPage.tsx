@@ -14,6 +14,8 @@ type InvoiceRow = {
   erp?: string;
   customer?: string;
   pdfUrl?: string;
+  senderTaxId?: string;
+  receiverTaxId?: string;
 };
 
 export default function DashboardPage() {
@@ -58,7 +60,9 @@ export default function DashboardPage() {
     const erp = inv?.erp || inv?.erpName || inv?.system || inv?.sourceErp || undefined;
     const customer = inv?.customer || inv?.customerName || inv?.buyerBusinessName || inv?.receiverBusinessName || undefined;
     const pdfUrl = inv?.file_url || inv?.fileUrl || inv?.pdfUrl || undefined;
-    return { id: String(id), date, provider: String(provider), amount: isNaN(amountNum) ? 0 : amountNum, status: mapStatus(inv?.status), erp, customer, pdfUrl };
+    const senderTaxId = inv?.senderTaxId || inv?.senderNIT || inv?.senderNit || inv?.providerTaxId || inv?.providerTaxID || inv?.emitterTaxId || undefined;
+    const receiverTaxId = inv?.receiverTaxId || inv?.receiverNIT || inv?.receiverNit || inv?.customerTaxId || inv?.customerTaxID || inv?.buyerTaxId || undefined;
+    return { id: String(id), date, provider: String(provider), amount: isNaN(amountNum) ? 0 : amountNum, status: mapStatus(inv?.status), erp, customer, pdfUrl, senderTaxId, receiverTaxId };
   };
   const loadInvoices = async () => {
     setLoadingInvoices(true); setErrorInvoices("");
@@ -120,12 +124,24 @@ export default function DashboardPage() {
     return () => window.clearTimeout(id);
   }, [from, to, statusFilter, senderTaxId, receiverTaxId]);
 
+  // Auto-refresh every 10s to keep dashboard updated
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      loadInvoices();
+    }, 10000);
+    return () => window.clearInterval(intervalId);
+    // Include filters so refresh always uses latest criteria
+  }, [from, to, statusFilter, senderTaxId, receiverTaxId]);
+
   const stats = useMemo(() => {
     const total = rows.length;
     const aprobadas = rows.filter(d => d.status === "Aprobada").length;
     const rechazadas = rows.filter(d => d.status === "Rechazada").length;
     const monto = rows.reduce((acc, d) => acc + d.amount, 0);
-    return { total, aprobadas, rechazadas, monto };
+    const pendientes = rows.filter(d => d.status === "Pendiente").length;
+    const montoAprobadas = rows.filter(d => d.status === "Aprobada").reduce((acc, d) => acc + d.amount, 0);
+    const montoPendientes = rows.filter(d => d.status === "Pendiente").reduce((acc, d) => acc + d.amount, 0);
+    return { total, aprobadas, rechazadas, pendientes, monto, montoAprobadas, montoPendientes };
   }, [rows]);
 
   const fmtCurrency = (n: number) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
@@ -247,11 +263,11 @@ export default function DashboardPage() {
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>NIT Emisor</label>
-            <input aria-label="NIT Emisor" placeholder="Sender Tax ID" value={senderTaxId} onChange={e => setSenderTaxId(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+            <input aria-label="NIT Emisor" placeholder="NIT Emisor" value={senderTaxId} onChange={e => setSenderTaxId(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>NIT Receptor</label>
-            <input aria-label="NIT Receptor" placeholder="Receiver Tax ID" value={receiverTaxId} onChange={e => setReceiverTaxId(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+            <input aria-label="NIT Receptor" placeholder="NIT Receptor" value={receiverTaxId} onChange={e => setReceiverTaxId(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
           </div>
           <button type="button" onClick={() => { console.debug('dashboard: open export modal'); setShowExport(true); }} style={{ background: "#16a34a", color: "#fff", border: 0, borderRadius: 8, padding: "10px 12px" }}>Exportar data a ERP</button>
         </div>
@@ -259,10 +275,15 @@ export default function DashboardPage() {
           <button onClick={onSearch} style={{ background: "var(--brand)", color: "#fff", border: 0, borderRadius: 8, padding: "10px 16px" }}>Buscar</button>
           <button onClick={onClearFilters} style={{ background: '#e2e8f0', color: '#0f172a', border: 0, borderRadius: 8, padding: '10px 16px' }}>Limpiar filtros</button>
         </div>
+        {/* Row 1: Counters */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
           <div style={{ background: "#bfdbfe", borderRadius: 12, padding: 14 }}>
             <div style={{ color: "#1e3a8a", fontSize: 12 }}>Facturas Ingresadas</div>
             <div style={{ fontSize: 28, color: "#0f172a" }}>{stats.total}</div>
+          </div>
+          <div style={{ background: "#fde68a", borderRadius: 12, padding: 14 }}>
+            <div style={{ color: "#92400e", fontSize: 12 }}>Pendientes</div>
+            <div style={{ fontSize: 28, color: "#0f172a" }}>{stats.pendientes}</div>
           </div>
           <div style={{ background: "#bbf7d0", borderRadius: 12, padding: 14 }}>
             <div style={{ color: "#14532d", fontSize: 12 }}>Aprobadas</div>
@@ -272,9 +293,21 @@ export default function DashboardPage() {
             <div style={{ color: "#7f1d1d", fontSize: 12 }}>Rechazadas</div>
             <div style={{ fontSize: 28, color: "#0f172a" }}>{stats.rechazadas}</div>
           </div>
+        </div>
+
+        {/* Row 2: Totals combined in a single line */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 12 }}>
+          <div style={{ background: "#dcfce7", borderRadius: 12, padding: 18, border: '1px solid #a7f3d0' }}>
+            <div style={{ color: "#166534", fontSize: 13, fontWeight: 600 }}>Monto Aprobadas</div>
+            <div style={{ fontSize: 24, color: "#0f172a", lineHeight: 1.2 }}>{fmtCurrency(stats.montoAprobadas)}</div>
+          </div>
           <div style={{ background: "#fef3c7", borderRadius: 12, padding: 14 }}>
             <div style={{ color: "#7c2d12", fontSize: 12 }}>Monto Total</div>
-            <div style={{ fontSize: 24, color: "#0f172a", fontWeight: 700 }}>{fmtCurrency(stats.monto)}</div>
+            <div style={{ fontSize: 24, color: "#0f172a" }}>{fmtCurrency(stats.monto)}</div>
+          </div>
+          <div style={{ background: "#fef9c3", borderRadius: 12, padding: 14 }}>
+            <div style={{ color: "#854d0e", fontSize: 12 }}>Monto Pendientes</div>
+            <div style={{ fontSize: 24, color: "#0f172a" }}>{fmtCurrency(stats.montoPendientes)}</div>
           </div>
         </div>
       </section>
@@ -290,9 +323,9 @@ export default function DashboardPage() {
               <tr style={{ textAlign: "left", color: "var(--muted)" }}>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>ID</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Fecha</th>
-                <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Proveedor</th>
+                <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>NIT - Emisor</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Monto</th>
-                <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Cliente</th>
+                <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>NIT - Receptor</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Estado</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Acciones</th>
               </tr>
@@ -305,9 +338,9 @@ export default function DashboardPage() {
                 <tr key={row.id} style={{ background: idx % 2 === 0 ? "var(--card)" : "var(--bg)" }}>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.id}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.date}</td>
-                  <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.provider}</td>
+                  <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{`${row.senderTaxId ? `${row.senderTaxId} - ` : ''}${row.provider}`}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{fmtCurrency(row.amount)}</td>
-                  <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.customer || '—'}</td>
+                  <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{`${row.receiverTaxId ? `${row.receiverTaxId} - ` : ''}${row.customer || '—'}`}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>
                     {row.status === "Aprobada" && <Badge text="Aprobada" tone="green" />}
                     {row.status === "Rechazada" && <Badge text="Rechazada" tone="red" />}
