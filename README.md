@@ -40,7 +40,6 @@ La aplicación está construida siguiendo principios de **Clean Architecture** y
 - **invoicextract-backend**: API principal de facturas (Spring Boot)
 - **invoicextract-mapping-service**: Servicio de mapeos ERP (Spring Boot)
 - **frontend**: Frontend React (versión actual)
-- **invoice-extract-frontend-master**: Frontend React (nueva versión en pruebas)
 - **keycloak/themes**: Tema de Keycloak para autenticación
 - **liquibase**: Cambios de base de datos para `invoices`
 - **liquibase-mappings | liquibase-mappings**: Cambios de base de datos para `mappings`
@@ -115,8 +114,9 @@ La aplicación utiliza **Docker Compose** para orquestar múltiples servicios:
 | **kafka** | `9092` | Message broker para procesamiento asíncrono |
 | **app** | `8080` | API principal Spring Boot (`/invoicextract`) |
 | **mapping-service** | `8082` | API de mapeos ERP (`/invoice-mapping`) |
-| **frontend** | `3000` | Frontend React actual |
-| **frontend-new** | `3001` | Frontend React (nueva versión en pruebas) |
+| **frontend** | `3000` | Frontend React |
+| **sonar-db** | `-` | PostgreSQL para SonarQube |
+| **sonarqube** | `9000` | Plataforma de calidad de código |
 
 ### 🔄 Proceso de Inicialización
 
@@ -139,6 +139,30 @@ Una vez que la aplicación esté ejecutándose, puedes acceder a:
 - **🖥️ Frontend**: http://localhost:3000
 - **🖥️ Frontend (New)**: http://localhost:3001
 - **📊 Health Check**: http://localhost:8080/invoicextract/actuator/health
+- **🧪 SonarQube**: http://localhost:9000
+
+### 🧪 Calidad de Código con SonarQube
+
+SonarQube está incluido en docker-compose para análisis de calidad del backend y servicios.
+
+1. Inicia la plataforma:
+   - `docker-compose up -d --build`
+2. Accede a SonarQube: http://localhost:9000
+   - Credenciales por defecto: `admin` / `admin` (se te pedirá cambiar contraseña)
+3. Crea un Token Personal en SonarQube (My Account → Security).
+4. Ejecuta el análisis desde el módulo backend (o raíz, según tu POM):
+
+```bash
+# Desde c:\invoicextract-app\invoicextract-backend
+mvn -DskipTests=true clean verify sonar:sonar ^
+  -Dsonar.host.url=http://localhost:9000 ^
+  -Dsonar.login=<TU_TOKEN> ^
+  -Dsonar.projectKey=invoicextract-backend
+```
+
+Notas:
+- Ajusta `sonar.projectKey` si tienes varios módulos (e.g., `invoicextract-mapping-service`).
+- Si tu POM ya define propiedades Sonar, puedes omitir flags redundantes.
 
 ## 🤖 Servicio RPA (Windows)
 
