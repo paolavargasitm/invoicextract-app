@@ -194,23 +194,6 @@ services:
       INVOICES_DB_PASS: root
     networks:
       - app_network
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_KEYCLOAK_URL: "http://localhost:8085"
-        VITE_KEYCLOAK_REALM: "invoicextract"
-        VITE_KEYCLOAK_CLIENT_ID: "invoices-frontend"
-        VITE_BACKEND_BASE_URL: "http://localhost:8080/invoicextract"
-        VITE_MAPPINGS_BASE_URL: "http://localhost:8082/invoice-mapping"
-    container_name: invoicextract-frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - keycloak
-    networks:
-      - app_network
 
   frontend-new:
     build:
