@@ -31,6 +31,9 @@ export default function DashboardPage() {
   const [rows, setRows] = useState<InvoiceRow[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
   const [errorInvoices, setErrorInvoices] = useState<string>("");
+  // Auto refresh controls
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState<boolean>(true);
+  const [refreshIntervalSec, setRefreshIntervalSec] = useState<number>(30);
   // Export modal state
   const [showExport, setShowExport] = useState(false);
   const [erp, setErp] = useState("SAP");
@@ -124,14 +127,15 @@ export default function DashboardPage() {
     return () => window.clearTimeout(id);
   }, [from, to, statusFilter, senderTaxId, receiverTaxId]);
 
-  // Auto-refresh every 10s to keep dashboard updated
+  // Auto-refresh with configurable interval
   useEffect(() => {
+    if (!autoRefreshEnabled) return;
     const intervalId = window.setInterval(() => {
       loadInvoices();
-    }, 10000);
+    }, Math.max(3, refreshIntervalSec) * 1000);
     return () => window.clearInterval(intervalId);
     // Include filters so refresh always uses latest criteria
-  }, [from, to, statusFilter, senderTaxId, receiverTaxId]);
+  }, [from, to, statusFilter, senderTaxId, receiverTaxId, autoRefreshEnabled, refreshIntervalSec]);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -242,7 +246,43 @@ export default function DashboardPage() {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <section style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: 16 }}>
-        <h2 style={{ marginTop: 0, color: "var(--text)" }}>Dashboard General</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <h2 style={{ marginTop: 0, color: "var(--text)", marginBottom: 0 }}>Dashboard General</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: 'var(--muted)', fontSize: 13 }}>Auto-actualizar</span>
+            <button
+              type="button"
+              onClick={() => setAutoRefreshEnabled(v => !v)}
+              aria-pressed={autoRefreshEnabled}
+              style={{
+                background: autoRefreshEnabled ? 'var(--brand)' : '#e2e8f0',
+                color: autoRefreshEnabled ? '#fff' : '#0f172a',
+                border: 0,
+                borderRadius: 8,
+                padding: '6px 10px',
+                cursor: 'pointer'
+              }}
+            >{autoRefreshEnabled ? 'ON' : 'OFF'}</button>
+            <select
+              aria-label="Intervalo de actualización"
+              value={refreshIntervalSec}
+              onChange={e => setRefreshIntervalSec(Number(e.target.value))}
+              style={{
+                background: 'var(--card)',
+                color: 'var(--text)',
+                border: '1px solid var(--border)',
+                borderRadius: 8,
+                padding: '6px 8px'
+              }}
+            >
+              <option value={5}>5s</option>
+              <option value={10}>10s</option>
+              <option value={15}>15s</option>
+              <option value={30}>30s</option>
+              <option value={60}>60s</option>
+            </select>
+          </div>
+        </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, alignItems: "end" }}>
           <div>
             <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>Creación desde</label>
@@ -459,6 +499,10 @@ function InvoiceDetailModal({ open, row, onClose }: { open: boolean, row: Invoic
           status={invoiceStatus}
           pdfUrl={pdfUrl}
           xmlUrl={xmlUrl}
+          senderTaxId={row.senderTaxId}
+          receiverTaxId={row.receiverTaxId}
+          senderName={row.provider}
+          receiverName={row.customer}
           items={items as any}
           onApprove={async () => { await approveInvoice(); /* keep modal open */ }}
           onReject={async () => { await rejectInvoice(); /* keep modal open */ }}

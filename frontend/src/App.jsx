@@ -10,6 +10,8 @@ export default function App() {
   const [apiResponse, setApiResponse] = useState("");
   const [tokenPreview, setTokenPreview] = useState("");
   const [activeView, setActiveView] = useState("dashboard");
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const [refreshIntervalSec, setRefreshIntervalSec] = useState(30);
 
   const callApi = async () => {
     setStatus("Fetching...");
@@ -50,6 +52,15 @@ export default function App() {
     callApi();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!autoRefreshEnabled || activeView !== "dashboard") return;
+    const id = setInterval(() => {
+      callInvoices();
+    }, refreshIntervalSec * 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRefreshEnabled, refreshIntervalSec, activeView]);
 
   const logout = () => keycloak.logout({ redirectUri: window.location.origin });
 
@@ -225,9 +236,42 @@ export default function App() {
 
             <section style={{ marginTop: 24, display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
               <div style={{ background: theme.card, border: `1px solid ${theme.border}`, borderRadius: 12, padding: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <h3 style={{ margin: 0, color: theme.text }}>Estado</h3>
-                  <span style={{ color: theme.muted }}>{status}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ color: theme.muted }}>{status}</span>
+                    <div style={{ width: 1, height: 20, background: theme.border }} />
+                    <span style={{ color: theme.muted, fontSize: 13 }}>Auto-actualizar</span>
+                    <button
+                      onClick={() => setAutoRefreshEnabled(v => !v)}
+                      aria-pressed={autoRefreshEnabled}
+                      style={{
+                        background: autoRefreshEnabled ? theme.brand : theme.border,
+                        color: autoRefreshEnabled ? "#fff" : theme.text,
+                        border: 0,
+                        borderRadius: 8,
+                        padding: "6px 10px",
+                        cursor: "pointer"
+                      }}
+                    >{autoRefreshEnabled ? "ON" : "OFF"}</button>
+                    <select
+                      value={refreshIntervalSec}
+                      onChange={e => setRefreshIntervalSec(Number(e.target.value))}
+                      aria-label="Intervalo de actualización"
+                      style={{
+                        background: "#fff",
+                        color: theme.text,
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: 8,
+                        padding: "6px 8px"
+                      }}
+                    >
+                      <option value={5}>5s</option>
+                      <option value={15}>15s</option>
+                      <option value={30}>30s</option>
+                      <option value={60}>60s</option>
+                    </select>
+                  </div>
                 </div>
                 <div style={{ marginTop: 12, overflow: "auto" }}>
                   <div style={{ color: theme.muted, fontSize: 13, marginBottom: 8 }}>Token</div>

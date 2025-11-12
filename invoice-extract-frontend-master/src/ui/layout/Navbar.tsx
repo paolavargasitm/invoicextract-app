@@ -31,7 +31,7 @@ export default function Navbar() {
 
   return (
     <header style={{ background: "var(--card)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 20, boxShadow: "0 4px 16px rgba(15, 23, 42, 0.06)" }}>
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ maxWidth: 1600, margin: "0 auto", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <span className="brand-badge">
             <img
