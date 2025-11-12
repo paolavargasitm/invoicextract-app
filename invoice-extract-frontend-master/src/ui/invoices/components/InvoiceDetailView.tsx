@@ -9,6 +9,11 @@ export type InvoiceDetailViewProps = {
     status: string;
     pdfUrl?: string;
     xmlUrl?: string;
+    // Nuevos campos: NIT y nombres de emisor/receptor y número de factura
+    senderTaxId?: string;
+    receiverTaxId?: string;
+    senderName?: string;
+    receiverName?: string;
     items?: Array<{ itemCode?: string; description?: string; quantity?: number; unit?: string; subtotal?: number | string; total?: number | string; }>;
     onApprove: () => void;
     onReject: () => void;
@@ -26,12 +31,15 @@ function statusVariant(status: string) {
 
 const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({
     id,
-    provider,
     date,
     formattedAmount,
     status,
     pdfUrl,
     xmlUrl,
+    senderTaxId,
+    receiverTaxId,
+    senderName,
+    receiverName,
     items = [],
     onApprove,
     onReject,
@@ -50,7 +58,10 @@ const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({
             <div className="invd__content-scroll">
                 <h2 className="invd__title">Detalle de Factura: {id}</h2>
 
-                <p><strong>Proveedor:</strong> {provider}</p>
+                
+                
+                <p><strong>Emisor (NIT):</strong> {senderTaxId || "—"} {senderName ? `- ${senderName}` : ""}</p>
+                <p><strong>Receptor (NIT):</strong> {receiverTaxId || "—"} {receiverName ? `- ${receiverName}` : ""}</p>
                 <p><strong>Fecha:</strong> {date}</p>
                 <p><strong>Monto:</strong> {formattedAmount}</p>
                 <p>

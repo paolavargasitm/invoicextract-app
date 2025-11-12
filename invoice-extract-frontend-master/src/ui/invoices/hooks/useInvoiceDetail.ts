@@ -12,6 +12,12 @@ export type Invoice = {
     status?: InvoiceStatus;
     pdfUrl?: string; // maps to backend invoicePathPDF
     xmlUrl?: string; // maps to backend invoicePathXML
+    // Nuevos campos (opcionales) para mostrar en detalle
+    senderTaxId?: string;
+    receiverTaxId?: string;
+    senderName?: string;
+    receiverName?: string;
+    invoiceNumber?: string;
 };
 
 export type InvoiceItem = {
