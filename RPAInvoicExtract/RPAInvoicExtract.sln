@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36408.4
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RPAInvoicExtract", "RPAInvoicExtract\RPAInvoicExtract.csproj", "{F9A153AE-5973-496D-8B4B-517899A54E13}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "RPAInvoicExtract.Installer", "RPAInvoicExtract.Installer\RPAInvoicExtract.Installer.vdproj", "{90BE59CC-FE53-22FE-DB80-63D523AF04CA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F9A153AE-5973-496D-8B4B-517899A54E13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9A153AE-5973-496D-8B4B-517899A54E13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9A153AE-5973-496D-8B4B-517899A54E13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9A153AE-5973-496D-8B4B-517899A54E13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90BE59CC-FE53-22FE-DB80-63D523AF04CA}.Debug|Any CPU.ActiveCfg = Debug
+		{90BE59CC-FE53-22FE-DB80-63D523AF04CA}.Release|Any CPU.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B85F16C0-0F6B-43CF-8C45-793A8A4A4AD5}
+	EndGlobalSection
+EndGlobal

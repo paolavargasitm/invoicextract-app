@@ -35,6 +35,12 @@ public class InvoiceDetailDTO {
     @Schema(description = "Sender business name", example = "Supplier Inc")
     private String senderBusinessName;
 
+    @Schema(description = "Invoice PDF path", example = "/invoices/INV-2024-001.pdf")
+    private String invoicePathPDF;
+
+    @Schema(description = "Invoice XML path", example = "/invoices/INV-2024-001.xml")
+    private String invoicePathXML;
+
     @Schema(description = "Total amount", example = "1500.75")
     private BigDecimal amount;
 

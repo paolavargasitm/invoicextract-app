@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { authHeader } from "../../../auth/keycloak";
+import ErrorBanner from "../../../components/ErrorBanner";
 import InvoiceDetailView from "../../invoices/components/InvoiceDetailView";
 import { useInvoiceDetail } from "../../invoices/hooks/useInvoiceDetail";
-import ErrorBanner from "../../../components/ErrorBanner";
 
 type InvoiceRow = {
   id: string;
@@ -12,20 +13,27 @@ type InvoiceRow = {
   status: "Aprobada" | "Rechazada" | "Pendiente";
   erp?: string;
   customer?: string;
+  pdfUrl?: string;
+  senderTaxId?: string;
+  receiverTaxId?: string;
 };
 
 export default function DashboardPage() {
-  // Filtros (placeholder)
-  const [userOrEmail, setUserOrEmail] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Filtros
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | "APPROVED" | "REJECTED" | "PENDING">("");
   const [senderTaxId, setSenderTaxId] = useState<string>("");
   const [receiverTaxId, setReceiverTaxId] = useState<string>("");
+  const firstLoadRef = useRef(true);
   // Invoices state
   const [rows, setRows] = useState<InvoiceRow[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
   const [errorInvoices, setErrorInvoices] = useState<string>("");
+  // Auto refresh controls
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState<boolean>(true);
+  const [refreshIntervalSec, setRefreshIntervalSec] = useState<number>(30);
   // Export modal state
   const [showExport, setShowExport] = useState(false);
   const [erp, setErp] = useState("SAP");
@@ -35,7 +43,7 @@ export default function DashboardPage() {
   const [erpOptions, setErpOptions] = useState<string[]>(["SAP"]);
   // Detail modal state
   const [showDetail, setShowDetail] = useState(false);
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const [selectedRow, setSelectedRow] = useState<InvoiceRow | null>(null);
 
   const backendBase = () => (import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:8080/invoicextract");
   // Load invoices from API (fallback-friendly mapping)
@@ -54,7 +62,10 @@ export default function DashboardPage() {
     const amountNum = Number(inv?.amount ?? inv?.total ?? inv?.totalAmount ?? inv?.grandTotal ?? 0);
     const erp = inv?.erp || inv?.erpName || inv?.system || inv?.sourceErp || undefined;
     const customer = inv?.customer || inv?.customerName || inv?.buyerBusinessName || inv?.receiverBusinessName || undefined;
-    return { id: String(id), date, provider: String(provider), amount: isNaN(amountNum) ? 0 : amountNum, status: mapStatus(inv?.status), erp, customer };
+    const pdfUrl = inv?.file_url || inv?.fileUrl || inv?.pdfUrl || undefined;
+    const senderTaxId = inv?.senderTaxId || inv?.senderNIT || inv?.senderNit || inv?.providerTaxId || inv?.providerTaxID || inv?.emitterTaxId || undefined;
+    const receiverTaxId = inv?.receiverTaxId || inv?.receiverNIT || inv?.receiverNit || inv?.customerTaxId || inv?.customerTaxID || inv?.buyerTaxId || undefined;
+    return { id: String(id), date, provider: String(provider), amount: isNaN(amountNum) ? 0 : amountNum, status: mapStatus(inv?.status), erp, customer, pdfUrl, senderTaxId, receiverTaxId };
   };
   const loadInvoices = async () => {
     setLoadingInvoices(true); setErrorInvoices("");
@@ -81,14 +92,60 @@ export default function DashboardPage() {
     } finally { setLoadingInvoices(false); }
   };
 
-  useEffect(() => { loadInvoices(); /* eslint-disable-next-line */ }, []);
+  // Initialize filters from URL params once
+  useEffect(() => {
+    try {
+      const f = searchParams.get('from') || "";
+      const t = searchParams.get('to') || "";
+      const s = (searchParams.get('status') || "") as any;
+      const sSender = searchParams.get('senderTaxId') || "";
+      const sReceiver = searchParams.get('receiverTaxId') || "";
+      if (f || t || s || sSender || sReceiver) {
+        setFrom(f);
+        setTo(t);
+        setStatusFilter(s);
+        setSenderTaxId(sSender);
+        setReceiverTaxId(sReceiver);
+      }
+    } catch {}
+    // then load
+    loadInvoices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-sync filters -> URL + auto reload (debounced)
+  useEffect(() => {
+    if (firstLoadRef.current) { firstLoadRef.current = false; return; }
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    if (statusFilter) params.set('status', statusFilter);
+    if (senderTaxId) params.set('senderTaxId', senderTaxId);
+    if (receiverTaxId) params.set('receiverTaxId', receiverTaxId);
+    setSearchParams(params);
+    const id = window.setTimeout(() => { loadInvoices(); }, 350);
+    return () => window.clearTimeout(id);
+  }, [from, to, statusFilter, senderTaxId, receiverTaxId]);
+
+  // Auto-refresh with configurable interval
+  useEffect(() => {
+    if (!autoRefreshEnabled) return;
+    const intervalId = window.setInterval(() => {
+      loadInvoices();
+    }, Math.max(3, refreshIntervalSec) * 1000);
+    return () => window.clearInterval(intervalId);
+    // Include filters so refresh always uses latest criteria
+  }, [from, to, statusFilter, senderTaxId, receiverTaxId, autoRefreshEnabled, refreshIntervalSec]);
 
   const stats = useMemo(() => {
     const total = rows.length;
     const aprobadas = rows.filter(d => d.status === "Aprobada").length;
     const rechazadas = rows.filter(d => d.status === "Rechazada").length;
     const monto = rows.reduce((acc, d) => acc + d.amount, 0);
-    return { total, aprobadas, rechazadas, monto };
+    const pendientes = rows.filter(d => d.status === "Pendiente").length;
+    const montoAprobadas = rows.filter(d => d.status === "Aprobada").reduce((acc, d) => acc + d.amount, 0);
+    const montoPendientes = rows.filter(d => d.status === "Pendiente").reduce((acc, d) => acc + d.amount, 0);
+    return { total, aprobadas, rechazadas, pendientes, monto, montoAprobadas, montoPendientes };
   }, [rows]);
 
   const fmtCurrency = (n: number) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
@@ -104,7 +161,25 @@ export default function DashboardPage() {
     }}>{text}</span>
   );
 
-  const onSearch = () => { loadInvoices(); };
+  const onSearch = () => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    if (statusFilter) params.set('status', statusFilter);
+    if (senderTaxId) params.set('senderTaxId', senderTaxId);
+    if (receiverTaxId) params.set('receiverTaxId', receiverTaxId);
+    setSearchParams(params);
+    loadInvoices();
+  };
+  const onClearFilters = () => {
+    setFrom("");
+    setTo("");
+    setStatusFilter("");
+    setSenderTaxId("");
+    setReceiverTaxId("");
+    setSearchParams(new URLSearchParams());
+    loadInvoices();
+  };
 
   const mappingsBase = () => (import.meta.env.VITE_MAPPINGS_BASE_URL || "http://localhost:8082/invoice-mapping");
 
@@ -171,28 +246,84 @@ export default function DashboardPage() {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <section style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: 16 }}>
-        <h2 style={{ marginTop: 0, color: "var(--text)" }}>Dashboard General</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, alignItems: "end" }}>
-          <input placeholder="ID usuario / Correo" value={userOrEmail} onChange={e => setUserOrEmail(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
-          <input type="date" value={from} onChange={e => setFrom(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
-          <input type="date" value={to} onChange={e => setTo(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }}>
-            <option value="">Todos los estados</option>
-            <option value="PENDING">Pendiente</option>
-            <option value="APPROVED">Aprobada</option>
-            <option value="REJECTED">Rechazada</option>
-          </select>
-          <input placeholder="Sender Tax ID" value={senderTaxId} onChange={e => setSenderTaxId(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
-          <input placeholder="Receiver Tax ID" value={receiverTaxId} onChange={e => setReceiverTaxId(e.target.value)} style={{ padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <h2 style={{ marginTop: 0, color: "var(--text)", marginBottom: 0 }}>Dashboard General</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: 'var(--muted)', fontSize: 13 }}>Auto-actualizar</span>
+            <button
+              type="button"
+              onClick={() => setAutoRefreshEnabled(v => !v)}
+              aria-pressed={autoRefreshEnabled}
+              style={{
+                background: autoRefreshEnabled ? 'var(--brand)' : '#e2e8f0',
+                color: autoRefreshEnabled ? '#fff' : '#0f172a',
+                border: 0,
+                borderRadius: 8,
+                padding: '6px 10px',
+                cursor: 'pointer'
+              }}
+            >{autoRefreshEnabled ? 'ON' : 'OFF'}</button>
+            <select
+              aria-label="Intervalo de actualización"
+              value={refreshIntervalSec}
+              onChange={e => setRefreshIntervalSec(Number(e.target.value))}
+              style={{
+                background: 'var(--card)',
+                color: 'var(--text)',
+                border: '1px solid var(--border)',
+                borderRadius: 8,
+                padding: '6px 8px'
+              }}
+            >
+              <option value={5}>5s</option>
+              <option value={10}>10s</option>
+              <option value={15}>15s</option>
+              <option value={30}>30s</option>
+              <option value={60}>60s</option>
+            </select>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, alignItems: "end" }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>Creación desde</label>
+            <input aria-label="Fecha de creación desde" type="date" value={from} onChange={e => setFrom(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>Creación hasta</label>
+            <input aria-label="Fecha de creación hasta" type="date" value={to} onChange={e => setTo(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>Estado</label>
+            <select aria-label="Estado" value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }}>
+              <option value="">Todos los estados</option>
+              <option value="PENDING">Pendiente</option>
+              <option value="APPROVED">Aprobada</option>
+              <option value="REJECTED">Rechazada</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>NIT Emisor</label>
+            <input aria-label="NIT Emisor" placeholder="NIT Emisor" value={senderTaxId} onChange={e => setSenderTaxId(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>NIT Receptor</label>
+            <input aria-label="NIT Receptor" placeholder="NIT Receptor" value={receiverTaxId} onChange={e => setReceiverTaxId(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid var(--border)`, background: 'var(--card)', color: 'var(--text)' }} />
+          </div>
           <button type="button" onClick={() => { console.debug('dashboard: open export modal'); setShowExport(true); }} style={{ background: "#16a34a", color: "#fff", border: 0, borderRadius: 8, padding: "10px 12px" }}>Exportar data a ERP</button>
         </div>
-        <div style={{ marginTop: 12 }}>
+        <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
           <button onClick={onSearch} style={{ background: "var(--brand)", color: "#fff", border: 0, borderRadius: 8, padding: "10px 16px" }}>Buscar</button>
+          <button onClick={onClearFilters} style={{ background: '#e2e8f0', color: '#0f172a', border: 0, borderRadius: 8, padding: '10px 16px' }}>Limpiar filtros</button>
         </div>
+        {/* Row 1: Counters */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
           <div style={{ background: "#bfdbfe", borderRadius: 12, padding: 14 }}>
             <div style={{ color: "#1e3a8a", fontSize: 12 }}>Facturas Ingresadas</div>
             <div style={{ fontSize: 28, color: "#0f172a" }}>{stats.total}</div>
+          </div>
+          <div style={{ background: "#fde68a", borderRadius: 12, padding: 14 }}>
+            <div style={{ color: "#92400e", fontSize: 12 }}>Pendientes</div>
+            <div style={{ fontSize: 28, color: "#0f172a" }}>{stats.pendientes}</div>
           </div>
           <div style={{ background: "#bbf7d0", borderRadius: 12, padding: 14 }}>
             <div style={{ color: "#14532d", fontSize: 12 }}>Aprobadas</div>
@@ -202,9 +333,21 @@ export default function DashboardPage() {
             <div style={{ color: "#7f1d1d", fontSize: 12 }}>Rechazadas</div>
             <div style={{ fontSize: 28, color: "#0f172a" }}>{stats.rechazadas}</div>
           </div>
+        </div>
+
+        {/* Row 2: Totals combined in a single line */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 12 }}>
+          <div style={{ background: "#dcfce7", borderRadius: 12, padding: 18, border: '1px solid #a7f3d0' }}>
+            <div style={{ color: "#166534", fontSize: 13, fontWeight: 600 }}>Monto Aprobadas</div>
+            <div style={{ fontSize: 24, color: "#0f172a", lineHeight: 1.2 }}>{fmtCurrency(stats.montoAprobadas)}</div>
+          </div>
           <div style={{ background: "#fef3c7", borderRadius: 12, padding: 14 }}>
             <div style={{ color: "#7c2d12", fontSize: 12 }}>Monto Total</div>
-            <div style={{ fontSize: 24, color: "#0f172a", fontWeight: 700 }}>{fmtCurrency(stats.monto)}</div>
+            <div style={{ fontSize: 24, color: "#0f172a" }}>{fmtCurrency(stats.monto)}</div>
+          </div>
+          <div style={{ background: "#fef9c3", borderRadius: 12, padding: 14 }}>
+            <div style={{ color: "#854d0e", fontSize: 12 }}>Monto Pendientes</div>
+            <div style={{ fontSize: 24, color: "#0f172a" }}>{fmtCurrency(stats.montoPendientes)}</div>
           </div>
         </div>
       </section>
@@ -220,39 +363,43 @@ export default function DashboardPage() {
               <tr style={{ textAlign: "left", color: "var(--muted)" }}>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>ID</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Fecha</th>
-                <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Proveedor</th>
+                <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>NIT - Emisor</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Monto</th>
-                <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>ERP</th>
-                <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Cliente</th>
+                <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>NIT - Receptor</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Estado</th>
                 <th style={{ padding: "10px 8px", fontSize: 12, textTransform: "uppercase" }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loadingInvoices && (
-                <tr><td colSpan={8} style={{ color: 'var(--muted)', padding: 8, borderTop: `1px solid var(--border)` }}>Cargando…</td></tr>
+                <tr><td colSpan={7} style={{ color: 'var(--muted)', padding: 8, borderTop: `1px solid var(--border)` }}>Cargando…</td></tr>
               )}
               {!loadingInvoices && !errorInvoices && rows.map((row, idx) => (
                 <tr key={row.id} style={{ background: idx % 2 === 0 ? "var(--card)" : "var(--bg)" }}>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.id}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.date}</td>
-                  <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.provider}</td>
+                  <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{`${row.senderTaxId ? `${row.senderTaxId} - ` : ''}${row.provider}`}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{fmtCurrency(row.amount)}</td>
-                  <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.erp || '—'}</td>
-                  <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{row.customer || '—'}</td>
+                  <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>{`${row.receiverTaxId ? `${row.receiverTaxId} - ` : ''}${row.customer || '—'}`}</td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>
                     {row.status === "Aprobada" && <Badge text="Aprobada" tone="green" />}
                     {row.status === "Rechazada" && <Badge text="Rechazada" tone="red" />}
                     {row.status === "Pendiente" && <Badge text="Pendiente" tone="amber" />}
                   </td>
                   <td style={{ padding: 8, borderTop: `1px solid var(--border)` }}>
-                    <button type="button" onClick={() => { setDetailId(row.id); setShowDetail(true); }} style={{ background: 'transparent', color: 'var(--brand)', border: 0, padding: 0, cursor: 'pointer' }}>Ver Detalle</button>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedRow(row); setShowDetail(true); }}
+                      style={{ background: 'transparent', color: 'var(--brand)', border: 0, padding: 0, cursor: 'pointer' }}
+                    >
+                      Ver Detalle
+                    </button>
                   </td>
                 </tr>
               ))}
               {!loadingInvoices && !errorInvoices && rows.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ color: 'var(--muted)', padding: 8, borderTop: `1px solid var(--border)` }}>Sin resultados</td>
+                  <td colSpan={7} style={{ color: 'var(--muted)', padding: 8, borderTop: `1px solid var(--border)` }}>Sin resultados</td>
                 </tr>
               )}
             </tbody>
@@ -288,12 +435,11 @@ export default function DashboardPage() {
           </div>
         </div>
       </Modal>
-
-      {/* Detalle de factura en modal */}
-      <InvoiceDetailModal open={showDetail} id={detailId} onClose={() => {
-        setShowDetail(false);
-        // refrescar lista: aquí conectaremos a API; por ahora, no-op
-      }} />
+      <InvoiceDetailModal
+        open={showDetail}
+        row={selectedRow}
+        onClose={() => { setShowDetail(false); loadInvoices(); }}
+      />
     </div>
   );
 }
@@ -314,31 +460,54 @@ function Modal({ open, onClose, children }: { open: boolean, onClose: () => void
   );
 }
 
-function InvoiceDetailModal({ open, id, onClose }: { open: boolean, id: string | null, onClose: () => void }) {
-  if (!open || !id) return null;
-  const { invoice, invoiceStatus, approveInvoice, rejectInvoice, downloadPDF, formattedAmount } = useInvoiceDetail({
-    id,
-    provider: "—",
-    date: new Date().toISOString().slice(0,10),
-    amount: 0,
-    status: "Pendiente",
-  });
-  const handleBack = () => {
-    onClose();
-  };
+function InvoiceDetailModal({ open, row, onClose }: { open: boolean, row: InvoiceRow | null, onClose: () => void }) {
+  if (!open || !row) return null;
+  const { invoice, invoiceStatus, approveInvoice, rejectInvoice, downloadPDF, downloadXML, formattedAmount, error, clearError, success, clearSuccess, items, pdfUrl, xmlUrl } = useInvoiceDetail({
+    id: row.id,
+    provider: row.provider,
+    date: row.date,
+    amount: row.amount,
+    status: row.status,
+    pdfUrl: row.pdfUrl,
+  } as any);
+  const handleBack = () => { onClose(); };
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.5)', display: 'grid', placeItems: 'center', zIndex: 50 }}>
-      <div style={{ background: 'var(--card)', color: 'var(--text)', borderRadius: 12, border: '1px solid var(--border)', width: 'min(980px, 96vw)', padding: 16 }}>
+      <div style={{ background: 'var(--card)', color: 'var(--text)', borderRadius: 12, border: '1px solid var(--border)', width: 'min(900px, 92vw)', padding: 14 }}>
+        {error && <ErrorBanner message={error.message} details={error.details} onClose={clearError} />}
+        {success && (
+          <div style={{
+            background: '#ecfdf5',
+            color: '#065f46',
+            padding: 10,
+            borderRadius: 8,
+            border: '1px solid #a7f3d0',
+            marginBottom: 10,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <span>{success.message}</span>
+            <button onClick={clearSuccess} style={{ background: 'transparent', border: 0, color: '#065f46', cursor: 'pointer' }}>✕</button>
+          </div>
+        )}
         <InvoiceDetailView
           id={invoice.id}
           provider={invoice.provider}
           date={invoice.date}
           formattedAmount={formattedAmount}
           status={invoiceStatus}
-          pdfUrl={invoice.pdfUrl}
-          onApprove={async () => { await approveInvoice(); onClose(); }}
-          onReject={async () => { await rejectInvoice(); onClose(); }}
+          pdfUrl={pdfUrl}
+          xmlUrl={xmlUrl}
+          senderTaxId={row.senderTaxId}
+          receiverTaxId={row.receiverTaxId}
+          senderName={row.provider}
+          receiverName={row.customer}
+          items={items as any}
+          onApprove={async () => { await approveInvoice(); /* keep modal open */ }}
+          onReject={async () => { await rejectInvoice(); /* keep modal open */ }}
           onDownload={downloadPDF}
+          onDownloadXml={downloadXML}
           onBack={handleBack}
         />
       </div>

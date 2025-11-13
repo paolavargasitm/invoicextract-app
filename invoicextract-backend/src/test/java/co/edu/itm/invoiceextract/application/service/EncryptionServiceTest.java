@@ -22,7 +22,7 @@ class EncryptionServiceTest {
     @DisplayName("should_encrypt_and_decrypt_with_config_key")
     void should_encrypt_and_decrypt_with_config_key() throws Exception {
         String configKey = service.generateEncryptionKey();
-        String plain = "s3cr3t-P@ss";
+        String plain = "bfnx ygve bpep mjac";
 
         String enc = service.encrypt(plain, configKey);
         String dec = service.decrypt(enc, configKey);
@@ -32,10 +32,10 @@ class EncryptionServiceTest {
     }
 
     @Test
-    @DisplayName("should_generate_64_char_hex_key")
+    @DisplayName("should_generate_32_char_ascii_key")
     void should_generate_64_char_hex_key() {
         String key = service.generateEncryptionKey();
-        assertThat(key).hasSize(64);
-        assertThat(key).matches("[0-9a-fA-F]{64}");
+        assertThat(key).hasSize(32);
+        assertThat(key).matches("[A-Za-z0-9]{32}");
     }
 }

@@ -42,8 +42,15 @@ databaseChangeLog:
                   name: updated_at
                   type: DATETIME
               - column:
-                  name: file_url
-                  type: VARCHAR(512)
+                  name: invoice_path_pdf
+                  type: VARCHAR(1024)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: invoice_path_xml
+                  type: VARCHAR(1024)
+                  constraints:
+                    nullable: true
 
   - changeSet:
       id: 2

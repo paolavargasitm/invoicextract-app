@@ -20,7 +20,7 @@ public class DynamicMappingService {
         for (FieldMapping r : rules) {
             Object val = resolvePath(source, r.getSourceField());
             val = registry.apply(r.getTransformFn(), val);
-            out.put(r.getTargetField(), val);
+            putTarget(out, r.getTargetField(), val);
         }
         return out;
     }
@@ -98,5 +98,83 @@ public class DynamicMappingService {
             }
         }
         return results;
+    }
+
+    // Write support: allows targets like items[].cantidad
+    @SuppressWarnings({"unchecked","rawtypes"})
+    private void putTarget(Map<String, Object> out, String targetPath, Object value) {
+        if (targetPath == null || targetPath.isBlank()) return;
+        if (!targetPath.contains("[]") && !targetPath.contains("[")) {
+            out.put(targetPath, value);
+            return;
+        }
+
+        // Split by '.' and build structures
+        String[] parts = targetPath.split("\\.");
+        putTargetRecursive(out, parts, 0, value);
+    }
+
+    @SuppressWarnings({"unchecked","rawtypes"})
+    private void putTargetRecursive(Object current, String[] parts, int idx, Object value) {
+        if (idx >= parts.length) {
+            // nothing to set
+            return;
+        }
+        String part = parts[idx];
+        boolean wildcard = part.endsWith("[]");
+        String key = wildcard ? part.substring(0, part.length() - 2) : part;
+
+        if (!(current instanceof Map)) return; // Only building maps at root/objects
+        Map map = (Map) current;
+        Object next = map.get(key);
+
+        if (wildcard) {
+            // Ensure list exists
+            List list;
+            if (next instanceof List) {
+                list = (List) next;
+            } else {
+                list = new java.util.ArrayList<>();
+                map.put(key, list);
+            }
+
+            // If the value is a list, distribute by index
+            if (value instanceof List<?> values) {
+                for (int i = 0; i < values.size(); i++) {
+                    Object elem = (i < list.size()) ? list.get(i) : null;
+                    if (!(elem instanceof Map)) {
+                        elem = new LinkedHashMap<>();
+                        // grow list if necessary
+                        if (i < list.size()) {
+                            list.set(i, elem);
+                        } else {
+                            // fill gaps with empty maps
+                            while (list.size() < i) list.add(new LinkedHashMap<>());
+                            list.add(elem);
+                        }
+                    }
+                    putTargetRecursive(elem, parts, idx + 1, values.get(i));
+                }
+            } else {
+                // Scalar value: set same value to first element
+                Object elem = (list.isEmpty() || !(list.get(0) instanceof Map)) ? new LinkedHashMap<>() : list.get(0);
+                if (list.isEmpty()) list.add(elem);
+                putTargetRecursive(elem, parts, idx + 1, value);
+            }
+            return;
+        }
+
+        // non-wildcard segment, might be terminal
+        if (idx == parts.length - 1) {
+            map.put(key, value);
+            return;
+        }
+
+        // Ensure next is a map
+        if (!(next instanceof Map)) {
+            next = new LinkedHashMap<>();
+            map.put(key, next);
+        }
+        putTargetRecursive(next, parts, idx + 1, value);
     }
 }

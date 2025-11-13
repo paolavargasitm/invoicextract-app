@@ -1,7 +1,7 @@
 import { authHeader } from "../../../auth/keycloak";
 import { parseBody, toUserError } from "../../../utils/httpError";
 
-const BASE_URL = (import.meta.env.VITE_BACKEND_BASE_URL || " http://localhost:8080/invoicextract");
+const BASE_URL = (import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:8080/invoicextract");
 
 async function request(path: string, options: RequestInit = {}) {
     const url = path.startsWith("http") ? path : `${BASE_URL}${path}`;
@@ -23,8 +23,9 @@ async function request(path: string, options: RequestInit = {}) {
 }
 
 export const invoicesApi = {
-    changeStatus: (id: number | string, status: "Pendiente" | "Aprobada" | "Rechazada") =>
+    changeStatus: (id: number | string, status: "PENDING" | "APPROVED" | "REJECTED") =>
         request(`/api/invoices/${id}/status?status=${encodeURIComponent(status)}`, {
             method: "PUT",
         }),
+    getById: (id: number | string) => request(`/api/invoices/${id}`),
 };

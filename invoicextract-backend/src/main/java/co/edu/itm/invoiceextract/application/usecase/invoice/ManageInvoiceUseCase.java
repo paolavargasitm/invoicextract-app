@@ -42,7 +42,16 @@ public class ManageInvoiceUseCase {
         Invoice invoice = invoiceMapper.toEntity(request);
         Invoice savedInvoice = invoiceRepository.save(invoice);
 
-        // Create and associate invoice item if present
+        // Create and associate invoice items if present (list and/or single)
+        if (request.getInvoiceItems() != null && !request.getInvoiceItems().isEmpty()) {
+            for (var itemDto : request.getInvoiceItems()) {
+                if (itemDto == null) continue;
+                InvoiceItem item = invoiceMapper.toItemEntity(itemDto);
+                item.setInvoice(savedInvoice);
+                invoiceItemRepository.save(item);
+                savedInvoice.addItem(item);
+            }
+        }
         if (request.getInvoiceItem() != null) {
             InvoiceItem item = invoiceMapper.toItemEntity(request.getInvoiceItem());
             item.setInvoice(savedInvoice);
@@ -196,6 +205,8 @@ public class ManageInvoiceUseCase {
         existingInvoice.setSenderTaxId(updatedData.getSenderTaxId());
         existingInvoice.setSenderTaxIdWithoutCheckDigit(updatedData.getSenderTaxIdWithoutCheckDigit());
         existingInvoice.setSenderBusinessName(updatedData.getSenderBusinessName());
+        existingInvoice.setInvoicePathPDF(updatedData.getInvoicePathPDF());
+        existingInvoice.setInvoicePathXML(updatedData.getInvoicePathXML());
         existingInvoice.setRelatedDocumentNumber(updatedData.getRelatedDocumentNumber());
         existingInvoice.setAmount(updatedData.getAmount());
         existingInvoice.setIssueDate(updatedData.getIssueDate());
@@ -207,11 +218,23 @@ public class ManageInvoiceUseCase {
         invoiceItemRepository.deleteAll(existingInvoice.getItems());
         existingInvoice.getItems().clear();
 
-        // Add new item
-        InvoiceItem newItem = invoiceMapper.toItemEntity(request.getInvoiceItem());
-        newItem.setInvoice(existingInvoice);
-        invoiceItemRepository.save(newItem);
-        existingInvoice.addItem(newItem);
+        boolean addedAny = false;
+        if (request.getInvoiceItems() != null && !request.getInvoiceItems().isEmpty()) {
+            for (var itemDto : request.getInvoiceItems()) {
+                if (itemDto == null) continue;
+                InvoiceItem newItem = invoiceMapper.toItemEntity(itemDto);
+                newItem.setInvoice(existingInvoice);
+                invoiceItemRepository.save(newItem);
+                existingInvoice.addItem(newItem);
+                addedAny = true;
+            }
+        }
+        if (!addedAny && request.getInvoiceItem() != null) {
+            InvoiceItem newItem = invoiceMapper.toItemEntity(request.getInvoiceItem());
+            newItem.setInvoice(existingInvoice);
+            invoiceItemRepository.save(newItem);
+            existingInvoice.addItem(newItem);
+        }
     }
 
     /**

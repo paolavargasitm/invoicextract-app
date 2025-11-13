@@ -18,15 +18,47 @@ export function useEmailConfig(opts?: { onValidate?: ValidateFn; onSave?: SaveFn
     const [activeUsername, setActiveUsername] = useState<string>("");
     const [activeConfiguredAt, setActiveConfiguredAt] = useState<string>("");
     const [successMessage, setSuccessMessage] = useState<string>("");
+    const [errorMessage, setErrorMessage] = useState<string>("");
 
-    const handleEmail = (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value);
-    const handlePassword = (e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value);
+    const isValidEmail = (value: string): boolean => {
+        const v = value.trim();
+        if (!v || v.length > 254) return false;
+        if (/[\r\n\t]/.test(v)) return false;
+        if (v.includes(" ")) return false;
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return false;
+        const [local, domain] = v.split("@");
+        if (!local || !domain) return false;
+        if (local.length === 0 || local.length > 64) return false;
+        return true;
+    };
 
-    const isComplete = email.trim() !== "" && password.trim() !== "";
+    const normalizeEmail = (value: string): string => {
+        const v = value.trim().replace(/[\r\n\t]/g, "");
+        const parts = v.split("@");
+        if (parts.length !== 2) return v;
+        return `${parts[0]}@${parts[1].toLowerCase()}`;
+    };
+
+    const handleEmail = (e: ChangeEvent<HTMLInputElement>) => {
+        setEmail(normalizeEmail(e.target.value));
+        if (errorMessage) setErrorMessage("");
+        if (successMessage) setSuccessMessage("");
+    };
+    const handlePassword = (e: ChangeEvent<HTMLInputElement>) => {
+        setPassword(e.target.value);
+        if (errorMessage) setErrorMessage("");
+        if (successMessage) setSuccessMessage("");
+    };
+
+    const isComplete = isValidEmail(email) && password.trim() !== "";
 
     const validarConexion = async () => {
-        if (!isComplete) {
+        if (!email.trim() || !password.trim()) {
             setValidationResult("Por favor, completa ambos campos.");
+            return;
+        }
+        if (!isValidEmail(email)) {
+            setValidationResult("Correo inválido.");
             return;
         }
         setLoading("validating");
@@ -47,8 +79,12 @@ export function useEmailConfig(opts?: { onValidate?: ValidateFn; onSave?: SaveFn
     };
 
     const guardarCredenciales = async () => {
-        if (!isComplete) {
-            alert("Por favor, completa ambos campos antes de guardar.");
+        if (!email.trim() || !password.trim()) {
+            setErrorMessage("Por favor, completa ambos campos antes de guardar.");
+            return;
+        }
+        if (!isValidEmail(email)) {
+            setErrorMessage("Correo inválido. Verifica el formato (usuario@dominio).");
             return;
         }
         setLoading("saving");
@@ -59,13 +95,20 @@ export function useEmailConfig(opts?: { onValidate?: ValidateFn; onSave?: SaveFn
                 // Guardar contra el backend protegido (mismo host de invoices)
                 const resp = await http("/api/config/email", {
                     method: "POST",
-                    body: JSON.stringify({ username: email, password })
+                    body: JSON.stringify({ username: normalizeEmail(email), password })
                 });
                 if (!resp.ok) {
                     const txt = await resp.text();
-                    throw new Error(txt || "Error al guardar credenciales");
+                    if (resp.status === 409) {
+                        // Forzar mensaje en español, independiente del texto del backend
+                        setErrorMessage("El correo ya existe. Por favor usa otro.");
+                        return;
+                    }
+                    setErrorMessage(txt || "Error al guardar credenciales");
+                    return;
                 }
                 setSuccessMessage("Credenciales guardadas correctamente.");
+                setErrorMessage("");
                 // limpiar formulario
                 setEmail("");
                 setPassword("");
@@ -123,6 +166,7 @@ export function useEmailConfig(opts?: { onValidate?: ValidateFn; onSave?: SaveFn
         activeUsername,
         activeConfiguredAt,
         successMessage,
+        errorMessage,
         refreshActiveEmail: fetchActiveEmail,
     };
 }

@@ -10,7 +10,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface InvoiceMessageMapper {
 
-    @Mapping(target = "fileUrl", ignore = true)
+    @Mapping(target = "invoicePathPDF", source = "invoicePathPDF")
+    @Mapping(target = "invoicePathXML", source = "invoicePathXML")
     @Mapping(target = "email", ignore = true)
     @Mapping(target = "status", constant = "PENDING")
     @Mapping(target = "date", expression = "java(java.time.LocalDateTime.now())")
@@ -27,6 +28,7 @@ public interface InvoiceMessageMapper {
     @Mapping(target = "issueDate", source = "issueDate")
     @Mapping(target = "dueDate", source = "dueDate")
     @Mapping(target = "invoiceItem", source = "invoiceItem")
+    @Mapping(target = "invoiceItems", source = "invoiceItems")
     InvoiceMessage toMessage(InvoiceRequestDTO dto);
 
     // Direct mapping back to DTO - all fields map 1:1
@@ -43,6 +45,7 @@ public interface InvoiceMessageMapper {
     @Mapping(target = "issueDate", source = "issueDate")
     @Mapping(target = "dueDate", source = "dueDate")
     @Mapping(target = "invoiceItem", source = "invoiceItem")
+    @Mapping(target = "invoiceItems", source = "invoiceItems")
     InvoiceRequestDTO toDto(InvoiceMessage message);
 
     // Direct mapping for invoice items

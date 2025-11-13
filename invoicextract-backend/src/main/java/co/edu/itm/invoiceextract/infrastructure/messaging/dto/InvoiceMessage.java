@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class InvoiceMessage {
@@ -12,7 +13,8 @@ public class InvoiceMessage {
     private String email;
     private LocalDateTime date;
     private InvoiceStatus status;
-    private String fileUrl;
+    private String invoicePathPDF;
+    private String invoicePathXML;
     
     // Core invoice fields matching InvoiceRequestDTO
     private String documentType;
@@ -30,4 +32,5 @@ public class InvoiceMessage {
     
     // Invoice item details
     private InvoiceItemMessage invoiceItem;
+    private List<InvoiceItemMessage> invoiceItems;
 }

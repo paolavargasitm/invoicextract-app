@@ -30,6 +30,14 @@ public class InvoiceService {
     public Invoice create(InvoiceRequestDTO request) {
         Invoice invoice = invoiceMapper.toEntity(request);
         Invoice savedInvoice = invoiceRepository.save(invoice);
+        if (request.getInvoiceItems() != null && !request.getInvoiceItems().isEmpty()) {
+            for (var itemDto : request.getInvoiceItems()) {
+                if (itemDto == null) continue;
+                InvoiceItem item = invoiceMapper.toItemEntity(itemDto);
+                item.setInvoice(savedInvoice);
+                invoiceItemRepository.save(item);
+            }
+        }
         if (request.getInvoiceItem() != null) {
             InvoiceItem item = invoiceMapper.toItemEntity(request.getInvoiceItem());
             item.setInvoice(savedInvoice);

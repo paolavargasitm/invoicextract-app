@@ -68,6 +68,77 @@
 					"response": []
 				},
 				{
+					"name": "Create Invoice (Async) Automation",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generar un monto aleatorio entre 1000 y 5000\r",
+									"pm.variables.set(\"amount\", (Math.random() * 4000 + 1000).toFixed(2));\r",
+									"\r",
+									"// Fechas aleatorias dentro de los últimos 30 días\r",
+									"function randomDate(start, end) {\r",
+									"  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));\r",
+									"}\r",
+									"\r",
+									"const issueDate = randomDate(new Date(2024, 7, 1), new Date(2024, 7, 30)); // agosto\r",
+									"const dueDate = new Date(issueDate);\r",
+									"dueDate.setDate(dueDate.getDate() + 30);\r",
+									"\r",
+									"pm.variables.set(\"issue_date\", issueDate.toISOString().split('T')[0]);\r",
+									"pm.variables.set(\"due_date\", dueDate.toISOString().split('T')[0]);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJSYndoa0tGWlU4VlVJelhXS0kzSUVJR1hTNlJPdjhSSG5BSjVmc0dNUTZrIn0.eyJleHAiOjE3NjI3Mjg2NzYsImlhdCI6MTc2MjcyODM3NiwianRpIjoiNDcyMzk2NmItZDk3My00NDBlLThhZGItMzI4MTUwZjQwZDkyIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDg1L3JlYWxtcy9pbnZvaWNleHRyYWN0IiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjJhNzRiZTQwLTRhMjMtNDI3YS04Y2VkLWY3NDM3Y2Q4N2YyNSIsInR5cCI6IkJlYXJlciIsImF6cCI6Imludm9pY2VzLWJhY2tlbmQiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIi8qIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsImRlZmF1bHQtcm9sZXMtaW52b2ljZXh0cmFjdCIsIkFETUlOIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJjbGllbnRIb3N0IjoiMTcyLjE4LjAuMSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWludm9pY2VzLWJhY2tlbmQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjE4LjAuMSIsImNsaWVudF9pZCI6Imludm9pY2VzLWJhY2tlbmQifQ.oUYx32ulSUvXDBiHTuUrBR-pY5mohUpeG8mHNgC9428_pw6-lD-cAYeZJxduiNqLD3OaYKKQ5k3ghMSdTQBzrsXz8fWoNXVJ7euwWdJP_oZqmpA-hdRjH7tQWdzFZTwM91gJizDh5g8NPW8DJa9pYI2okSlJu2cbr5rw33kaQjq_N6Yw1t5ogz1Qfv5IAx2Ze08c1twI8PNrW7JtPOgza5BTLpt7bTjxHNca0jlrP4Oz3AgWv9ldvi1u0NuNgWY1KedkrsI5V2EruMjLNQLJ7-GoVsnvZZU-0UUVuP7u31y7bpb_V2o6nbcr75md-douMxN7i0WRkR4IThGHHkBBvg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJSYndoa0tGWlU4VlVJelhXS0kzSUVJR1hTNlJPdjhSSG5BSjVmc0dNUTZrIn0.eyJleHAiOjE3NjI2NjAzMDIsImlhdCI6MTc2MjY2MDAwMiwianRpIjoiZDYxMTViYWEtNzRmNy00YjJlLWE3OTEtN2I0YjAyODNkYTVhIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDg1L3JlYWxtcy9pbnZvaWNleHRyYWN0IiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjJhNzRiZTQwLTRhMjMtNDI3YS04Y2VkLWY3NDM3Y2Q4N2YyNSIsInR5cCI6IkJlYXJlciIsImF6cCI6Imludm9pY2VzLWJhY2tlbmQiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIi8qIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsImRlZmF1bHQtcm9sZXMtaW52b2ljZXh0cmFjdCIsIkFETUlOIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJjbGllbnRIb3N0IjoiMTcyLjE4LjAuMSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWludm9pY2VzLWJhY2tlbmQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjE4LjAuMSIsImNsaWVudF9pZCI6Imludm9pY2VzLWJhY2tlbmQifQ.datu3o7fjzlvkB8bdfuLqcVIwjR4FkuKWjuqfHIdv-45AzelfkRKdV3LQlgXUAk8XdZty8yioqbUxLWvtrP8ObrJJdXc3ISLp91Jq5ynJXjorG_i0O1MUxg9-rAXhMgi8HdUhwe3FUN5y1cCiK6keraJ85ucQC2sS9km0V2alcj_gbgUhHi97xVJCiElKrf0jMVqgHoR6kZTgYt4H8GW5H3iLgN3XLRk685KA82PdgoriB-pAbs4AJ50x3LQnXohRc5bTTNV-jpNm96PqddeceptOiPF30ydQW5LqCcLiwhE44yhw200efdcwn4g_TWN0mdZK-LSImth3hTK5X1n3Q",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"DocumentType\": \"FACTURA\",\n  \"DocumentNumber\": \"INV-{{$randomInt}}\",\n  \"ReceiverTaxId\": \"123456789\",\n  \"ReceiverTaxIdWithoutCheckDigit\": \"12345678\",\n  \"ReceiverBusinessName\": \"Customer Corp {{$randomInt}} S.A.S\",\n  \"SenderTaxId\": \"987654321\",\n  \"SenderTaxIdWithoutCheckDigit\": \"98765432\",\n  \"SenderBusinessName\": \"Supplier Inc {{$randomInt}} S.A.S\",\n  \"RelatedDocumentNumber\": \"REL-{{$randomInt}}\",\n  \"Amount\": \"{{amount}}\",\n  \"IssueDate\": \"{{issue_date}}\",\n  \"DueDate\": \"{{due_date}}\",\n  \"InvoicePathPDF\":\"https://harvestpublic.s3.amazonaws.com/resources/Invoice_Template.pdf?utm_source=chatgpt.com\",\n  \"InvoicePathXML\":\"https://s3.amazonaws.com/helpscout.net/docs/assets/54183ff9e4b005ed2d1178f6/attachments/62bf7226360964399e46cee2/Invoice.xml?utm_source=chatgpt.com\",\n  \"InvoiceItems\": [\n    {\n      \"ItemCode\": \"S002\",\n      \"Description\": \"Servicio B\",\n      \"Quantity\": 2,\n      \"Unit\": \"EA\",\n      \"UnitPrice\": 50.00,\n      \"Subtotal\": 100.00,\n      \"TaxAmount\": 0,\n      \"Total\": 100.00\n    },\n    {\n      \"ItemCode\": \"S003\",\n      \"Description\": \"Servicio C\",\n      \"Quantity\": 1,\n      \"Unit\": \"EA\",\n      \"UnitPrice\": 170.35,\n      \"Subtotal\": 170.35,\n      \"TaxAmount\": 0,\n      \"Total\": 170.35\n    }\n  ]\n}\n"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/invoices/async",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"invoices",
+								"async"
+							]
+						},
+						"description": "Creates an invoice asynchronously via Kafka messaging"
+					},
+					"response": []
+				},
+				{
 					"name": "Get All Invoices",
 					"request": {
 						"method": "GET",
@@ -355,6 +426,30 @@
 							]
 						},
 						"description": "Reject an invoice by ID - changes status to REJECTED"
+					},
+					"response": []
+				},
+				{
+					"name": "GET Filter Invoices",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
 					},
 					"response": []
 				}

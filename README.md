@@ -40,12 +40,12 @@ La aplicación está construida siguiendo principios de **Clean Architecture** y
 - **invoicextract-backend**: API principal de facturas (Spring Boot)
 - **invoicextract-mapping-service**: Servicio de mapeos ERP (Spring Boot)
 - **frontend**: Frontend React (versión actual)
-- **invoice-extract-frontend-master**: Frontend React (nueva versión en pruebas)
 - **keycloak/themes**: Tema de Keycloak para autenticación
 - **liquibase**: Cambios de base de datos para `invoices`
 - **liquibase-mappings | liquibase-mappings**: Cambios de base de datos para `mappings`
 - **mysql-init**: Scripts de inicialización local
 - **postman**: Colecciones para pruebas
+ - **RPAInvoicExtract**: Agente RPA Windows (.NET Framework 4.8) para descarga/procesamiento de facturas
 
 ## 🐳 Construcción y Despliegue con Docker
 
@@ -114,8 +114,9 @@ La aplicación utiliza **Docker Compose** para orquestar múltiples servicios:
 | **kafka** | `9092` | Message broker para procesamiento asíncrono |
 | **app** | `8080` | API principal Spring Boot (`/invoicextract`) |
 | **mapping-service** | `8082` | API de mapeos ERP (`/invoice-mapping`) |
-| **frontend** | `3000` | Frontend React actual |
-| **frontend-new** | `3001` | Frontend React (nueva versión en pruebas) |
+| **frontend** | `3000` | Frontend React |
+| **sonar-db** | `-` | PostgreSQL para SonarQube |
+| **sonarqube** | `9000` | Plataforma de calidad de código |
 
 ### 🔄 Proceso de Inicialización
 
@@ -138,6 +139,88 @@ Una vez que la aplicación esté ejecutándose, puedes acceder a:
 - **🖥️ Frontend**: http://localhost:3000
 - **🖥️ Frontend (New)**: http://localhost:3001
 - **📊 Health Check**: http://localhost:8080/invoicextract/actuator/health
+- **🧪 SonarQube**: http://localhost:9000
+
+### 🧪 Calidad de Código con SonarQube
+
+SonarQube está incluido en docker-compose para análisis de calidad del backend y servicios.
+
+1. Inicia la plataforma:
+   - `docker-compose up -d --build`
+2. Accede a SonarQube: http://localhost:9000
+   - Credenciales por defecto: `admin` / `admin` (se te pedirá cambiar contraseña)
+3. Crea un Token Personal en SonarQube (My Account → Security).
+4. Ejecuta el análisis desde el módulo backend (o raíz, según tu POM):
+
+```bash
+# Desde c:\invoicextract-app\invoicextract-backend
+mvn -DskipTests=true clean verify sonar:sonar ^
+  -Dsonar.host.url=http://localhost:9000 ^
+  -Dsonar.login=<TU_TOKEN> ^
+  -Dsonar.projectKey=invoicextract-backend
+```
+
+Notas:
+- Ajusta `sonar.projectKey` si tienes varios módulos (e.g., `invoicextract-mapping-service`).
+- Si tu POM ya define propiedades Sonar, puedes omitir flags redundantes.
+
+## 🤖 Servicio RPA (Windows)
+
+### Descripción
+
+El proyecto `RPAInvoicExtract` es un agente Windows (C# .NET Framework 4.8) que automatiza la lectura de emails y el envío de documentos de factura al backend. Consume credenciales de correo seguras desde la API y envía las facturas para procesamiento asíncrono.
+
+### Prerrequisitos
+
+- Windows 10/11
+- .NET Framework 4.8 Runtime
+- (Opcional) Visual Studio 2022 para compilar/depurar
+
+### Configuración (App.config)
+
+Clave-valor principales en `RPAInvoicExtract/RPAInvoicExtract/App.config`:
+
+- `keyencrypt`: Clave de encriptación simétrica de 32 caracteres. Debe coincidir con la clave usada por el backend para desencriptar credenciales.
+- `urlToken`: URL de token de Keycloak para obtener `access_token`.
+- `client_idServices` y `client_secret`: Credenciales del cliente Keycloak que el RPA usa para autenticarse.
+- `urlEmails`: Endpoint del backend para obtener la configuración de email activa del usuario.
+- `urlInvoice`: Endpoint del backend para enviar la factura a procesamiento asíncrono.
+- `pathDowload`: Carpeta local donde el RPA descarga los archivos procesados.
+
+Valores por defecto de ejemplo alineados con Docker local:
+
+```xml
+<add key="urlToken" value="http://localhost:8085/realms/invoicextract/protocol/openid-connect/token" />
+<add key="client_idServices" value="invoices-backend" />
+<add key="client_secret" value="TlPOfnP8P30SdR6bRl3WtJSNqM6ojdhA" />
+<add key="urlEmails" value="http://localhost:8080/invoicextract/api/config/email/active" />
+<add key="urlInvoice" value="http://localhost:8080/invoicextract/api/invoices/async" />
+<add key="pathDowload" value="C:\\RPAInvoicExtract\\Downloads\\" />
+```
+
+⚠️ Seguridad: No uses `client_secret` ni `keyencrypt` por defecto en producción. Administra secretos de forma segura.
+
+### Ejecución local
+
+1. Levanta la plataforma con Docker:
+   - `docker-compose up -d --build`
+2. Verifica que los servicios estén disponibles:
+   - Keycloak: http://localhost:8085
+   - Backend: http://localhost:8080/invoicextract
+3. Ajusta `App.config` si es necesario (URLs/secretos/rutas).
+4. Compila y ejecuta el proyecto `RPAInvoicExtract.sln` en Visual Studio (o ejecuta el `.exe` compilado).
+
+### (Opcional) Instalar como servicio de Windows
+
+- Puedes usar NSSM o `sc.exe` para registrar el ejecutable como servicio.
+- Asegura permisos de escritura en `pathDowload` y acceso a red.
+
+### Flujo de trabajo
+
+1. Obtiene token de Keycloak usando `urlToken` + `client_idServices`/`client_secret`.
+2. Consulta credenciales activas de email vía `urlEmails`.
+3. Descarga/lee adjuntos, los guarda en `pathDowload`.
+4. Envía a backend para procesamiento con `urlInvoice` (proceso asíncrono vía Kafka).
 
 ## 📁 Estructura del Proyecto
 

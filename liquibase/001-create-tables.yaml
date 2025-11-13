@@ -25,7 +25,12 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: file_url
+                  name: invoice_path_pdf
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: invoice_path_xml
                   type: VARCHAR(500)
                   constraints:
                     nullable: true

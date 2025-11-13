@@ -12,6 +12,7 @@ export type EmailConfigViewProps = {
     activeUsername: string;
     activeConfiguredAt: string;
     successMessage: string;
+    errorMessage: string;
     onRefreshActive: () => void;
 };
 
@@ -26,6 +27,7 @@ const EmailConfigView: React.FC<EmailConfigViewProps> = ({
     activeUsername,
     activeConfiguredAt,
     successMessage,
+    errorMessage,
     onRefreshActive,
 }) => {
     return (
@@ -63,6 +65,19 @@ const EmailConfigView: React.FC<EmailConfigViewProps> = ({
             />
 
             {/* La validación no está disponible por ahora */}
+
+            {errorMessage && (
+                <div className="ec__error" role="alert" aria-live="assertive" style={{
+                    marginTop: 8,
+                    padding: "8px 10px",
+                    borderRadius: 8,
+                    background: "#fef2f2",
+                    color: "#991b1b",
+                    border: "1px solid #fecaca"
+                }}>
+                    {errorMessage}
+                </div>
+            )}
 
             {successMessage && (
                 <div className="ec__success" role="status" aria-live="polite" style={{

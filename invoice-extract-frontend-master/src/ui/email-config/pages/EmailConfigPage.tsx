@@ -14,6 +14,7 @@ const EmailConfigPage: React.FC = () => {
         activeUsername,
         activeConfiguredAt,
         successMessage,
+        errorMessage,
         refreshActiveEmail,
     } = useEmailConfig();
 
@@ -29,6 +30,7 @@ const EmailConfigPage: React.FC = () => {
             activeUsername={activeUsername}
             activeConfiguredAt={activeConfiguredAt}
             successMessage={successMessage}
+            errorMessage={errorMessage}
             onRefreshActive={refreshActiveEmail}
         />
     );

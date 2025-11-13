@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @RestController
 @RequestMapping("/api/config/email")
@@ -49,6 +50,8 @@ public class EmailConfigurationController {
         try {
             service.saveConfiguration(configDTO.getUsername(), configDTO.getPassword());
             return ResponseEntity.status(HttpStatus.CREATED).body("Email configuration saved successfully.");
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists: " + configDTO.getUsername());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving email configuration: " + e.getMessage());
         }

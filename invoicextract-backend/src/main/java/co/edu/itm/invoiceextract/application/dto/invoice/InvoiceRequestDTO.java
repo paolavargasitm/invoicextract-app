@@ -1,5 +1,6 @@
 package co.edu.itm.invoiceextract.application.dto.invoice;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -40,6 +42,14 @@ public class InvoiceRequestDTO {
     @JsonProperty("RelatedDocumentNumber")
     private String relatedDocumentNumber;
 
+    @JsonProperty("InvoicePathPDF")
+    @JsonAlias({"invoicePathPDF", "invoice_path_pdf", "FileUrl", "fileUrl", "file_url", "fileurl"})
+    private String invoicePathPDF;
+
+    @JsonProperty("InvoicePathXML")
+    @JsonAlias({"invoicePathXML", "invoice_path_xml"})
+    private String invoicePathXML;
+
     @JsonProperty("Amount")
     private String amount; // keep as string input, we'll parse to BigDecimal
 
@@ -51,4 +61,8 @@ public class InvoiceRequestDTO {
 
     @JsonProperty("InvoiceItem")
     private InvoiceItemDTO invoiceItem;
+
+    @JsonProperty("InvoiceItems")
+    @JsonAlias({"invoiceItems", "Items", "items"})
+    private List<InvoiceItemDTO> invoiceItems;
 }

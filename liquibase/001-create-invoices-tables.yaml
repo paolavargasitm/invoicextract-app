@@ -43,6 +43,16 @@ databaseChangeLog:
                   name: sender_business_name
                   type: VARCHAR(255)
               - column:
+                  name: invoice_path_pdf
+                  type: VARCHAR(1024)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: invoice_path_xml
+                  type: VARCHAR(1024)
+                  constraints:
+                    nullable: true
+              - column:
                   name: related_document_number
                   type: VARCHAR(100)
               - column:

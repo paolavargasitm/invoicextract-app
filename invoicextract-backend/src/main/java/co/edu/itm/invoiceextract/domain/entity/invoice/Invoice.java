@@ -46,6 +46,12 @@ public class Invoice extends AuditableEntity {
     @Column(name = "sender_business_name", length = 255)
     private String senderBusinessName;
 
+    @Column(name = "invoice_path_pdf", length = 1024)
+    private String invoicePathPDF;
+
+    @Column(name = "invoice_path_xml", length = 1024)
+    private String invoicePathXML;
+
     @Column(name = "related_document_number", length = 100)
     private String relatedDocumentNumber;
 
