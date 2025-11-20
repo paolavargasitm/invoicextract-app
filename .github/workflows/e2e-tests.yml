@@ -29,7 +29,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Create .env file if needed
         run: |
@@ -183,7 +183,6 @@ jobs:
           # Base URLs
           BASE_URL=http://localhost:3001
           FRONTEND_URL=http://localhost:3001
-          BACKEND_URL=http://localhost:8080/invoicextract
           KEYCLOAK_BASE_URL=http://localhost:8085
           API_BASE_URL=http://localhost:8080/invoicextract
           
@@ -221,7 +220,7 @@ jobs:
         env:
           BASE_URL: ${{ env.FRONTEND_URL }}
           FRONTEND_URL: ${{ env.FRONTEND_URL }}
-          BACKEND_URL: ${{ env.BACKEND_URL }}
+          API_BASE_URL: ${{ env.BACKEND_URL }}
           DB_ADMIN_URL: ${{ env.DB_ADMIN_URL }}
           KEYCLOAK_URL: ${{ env.KEYCLOAK_URL }}
           KEYCLOAK_BASE_URL: ${{ env.KEYCLOAK_URL }}
