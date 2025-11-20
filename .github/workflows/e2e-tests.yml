@@ -158,15 +158,19 @@ jobs:
           # API Configuration
           API_TIMEOUT=30000
           
+          # Keycloak Client Credentials for API Authentication
+          CLIENT_ID=invoices-backend
+          CLIENT_SECRET=TlPOfnP8P30SdR6bRl3WtJSNqM6ojdhA
+          
           # Test Credentials by Role
-          ADMIN_USERNAME=admin
-          ADMIN_PASSWORD=admin
+          ADMIN_USERNAME=ana.admin
+          ADMIN_PASSWORD=ana.admin
           
-          FINANCE_USERNAME=finance_user
-          FINANCE_PASSWORD=finance_password
+          FINANCE_USERNAME=diego.finanzas
+          FINANCE_PASSWORD=diego.finanzas
           
-          TECHNICIAN_USERNAME=technician_user
-          TECHNICIAN_PASSWORD=technician_password
+          TECHNICIAN_USERNAME=luis.tecnico
+          TECHNICIAN_PASSWORD=luis.tecnico
           EOF
           
           echo "✅ .env file created with test configuration"
