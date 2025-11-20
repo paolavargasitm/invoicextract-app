@@ -34,7 +34,7 @@ docker exec keycloak /opt/keycloak/bin/kcadm.sh config credentials \
 
 echo "Checking if realm already exists..."
 # Check if realm exists
-REALM_CHECK=$(docker exec keycloak /opt/keycloak/bin/kcadm.sh get realms/invoices \
+REALM_CHECK=$(docker exec keycloak /opt/keycloak/bin/kcadm.sh get realms/invoicextract \
   --config /tmp/kcadm.config 2>&1 || echo "NOT_FOUND")
 
 if echo "$REALM_CHECK" | grep -q "Resource not found"; then
@@ -45,7 +45,7 @@ if echo "$REALM_CHECK" | grep -q "Resource not found"; then
     -f /tmp/invoicextract-realm.json 2>&1 || echo "Realm import completed (may already exist)"
   echo "Realm import process completed!"
 else
-  echo "Realm 'invoices' already exists, skipping import."
+  echo "Realm 'invoicextract' already exists, skipping import."
 fi
 
 echo ""

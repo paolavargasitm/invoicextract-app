@@ -167,7 +167,7 @@ jobs:
           
           echo ""
           echo "=== Testing URL: Keycloak (${{ env.KEYCLOAK_URL }}) ==="
-          curl -I ${{ env.KEYCLOAK_URL }}/realms/invoices/.well-known/openid-configuration
+          curl -I ${{ env.KEYCLOAK_URL }}/realms/invoicextract/.well-known/openid-configuration
           echo "✅ Keycloak is accessible!"
 
       - name: Install dependencies and Playwright browsers
