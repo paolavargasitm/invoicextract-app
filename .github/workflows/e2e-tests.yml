@@ -23,17 +23,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Checkout automation submodule manually
+      - name: Clone automation test repository
         run: |
-          if [ -d "invoicextract-automation/invoicextract/.git" ]; then
-            cd invoicextract-automation/invoicextract
-            git fetch origin
-            git checkout feat/login
-            git pull origin feat/login
-          else
-            echo "Automation directory structure issue detected"
-            ls -la invoicextract-automation/ || echo "Directory doesn't exist"
-          fi
+          rm -rf invoicextract-automation/invoicextract
+          git clone --depth 1 --branch feat/login https://github.com/TatianaMurillo/invoicextract.git invoicextract-automation/invoicextract
+          ls -la invoicextract-automation/invoicextract/
+          echo "Checking for package.json..."
+          cat invoicextract-automation/invoicextract/package.json || echo "package.json not found!"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
