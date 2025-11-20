@@ -2232,5 +2232,51 @@
   },
   "clientPolicies" : {
     "policies" : [ ]
-  }
+  },
+  "users" : [ {
+    "username" : "service-account-invoices-backend",
+    "enabled" : true,
+    "emailVerified" : false,
+    "serviceAccountClientId" : "invoices-backend",
+    "realmRoles" : [ "ADMIN", "FINANZAS" ]
+  }, {
+    "username" : "ana.admin",
+    "enabled" : true,
+    "emailVerified" : true,
+    "firstName" : "Ana",
+    "lastName" : "Admin",
+    "email" : "ana.admin@invoicextract.com",
+    "credentials" : [ {
+      "type" : "password",
+      "value" : "ana.admin",
+      "temporary" : false
+    } ],
+    "realmRoles" : [ "ADMIN" ]
+  }, {
+    "username" : "diego.finanzas",
+    "enabled" : true,
+    "emailVerified" : true,
+    "firstName" : "Diego",
+    "lastName" : "Finanzas",
+    "email" : "diego.finanzas@invoicextract.com",
+    "credentials" : [ {
+      "type" : "password",
+      "value" : "diego.finanzas",
+      "temporary" : false
+    } ],
+    "realmRoles" : [ "FINANZAS" ]
+  }, {
+    "username" : "luis.tecnico",
+    "enabled" : true,
+    "emailVerified" : true,
+    "firstName" : "Luis",
+    "lastName" : "Tecnico",
+    "email" : "luis.tecnico@invoicextract.com",
+    "credentials" : [ {
+      "type" : "password",
+      "value" : "luis.tecnico",
+      "temporary" : false
+    } ],
+    "realmRoles" : [ "TECNICO" ]
+  } ]
 }
