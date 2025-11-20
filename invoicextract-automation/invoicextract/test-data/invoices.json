@@ -1,0 +1,77 @@
+[
+  {
+    "testCaseId": "sell-invoice",
+    "DocumentType": "01",
+    "DocumentNumber": "AUTO-TEST-SELL-001",
+    "ReceiverTaxId": "123456789-0",
+    "ReceiverTaxIdWithoutCheckDigit": "123456789",
+    "ReceiverBusinessName": "ACME Corporation",
+    "SenderTaxId": "987654321-9",
+    "SenderTaxIdWithoutCheckDigit": "987654321",
+    "SenderBusinessName": "Tech Solutions Ltd",
+    "RelatedDocumentNumber": "PO-2025-001",
+    "Amount": "39999.99",
+    "IssueDate": "2025-11-09",
+    "DueDate": "2025-11-09",
+    "InvoiceItem": {
+      "ItemCode": "P001",
+      "Description": "HP Laptop 15\"",
+      "Quantity": 10,
+      "Unit": "unit",
+      "UnitPrice": 3999.99,
+      "Subtotal": 39999.90,
+      "TaxAmount": 0.09,
+      "Total": 39999.99
+    }
+  },
+  {
+    "testCaseId": "service-invoice",
+    "DocumentType": "01",
+    "DocumentNumber": "AUTO-TEST-SERVICE-002",
+    "ReceiverTaxId": "111222333-4",
+    "ReceiverTaxIdWithoutCheckDigit": "111222333",
+    "ReceiverBusinessName": "Client Services Inc",
+    "SenderTaxId": "987654321-9",
+    "SenderTaxIdWithoutCheckDigit": "987654321",
+    "SenderBusinessName": "Tech Solutions Ltd",
+    "RelatedDocumentNumber": "SO-2025-002",
+    "Amount": "15000.00",
+    "IssueDate": "2025-11-09",
+    "DueDate": "2025-12-09",
+    "InvoiceItem": {
+      "ItemCode": "S001",
+      "Description": "Consulting Services",
+      "Quantity": 100,
+      "Unit": "hour",
+      "UnitPrice": 150.00,
+      "Subtotal": 15000.00,
+      "TaxAmount": 0.00,
+      "Total": 15000.00
+    }
+  },
+  {
+    "testCaseId": "update-invoice",
+    "DocumentType": "01",
+    "DocumentNumber": "AUTO-TEST-UPDATE-003",
+    "ReceiverTaxId": "123456789-0",
+    "ReceiverTaxIdWithoutCheckDigit": "123456789",
+    "ReceiverBusinessName": "ACME Corporation - Updated",
+    "SenderTaxId": "987654321-9",
+    "SenderTaxIdWithoutCheckDigit": "987654321",
+    "SenderBusinessName": "Tech Solutions Ltd",
+    "RelatedDocumentNumber": "PO-2025-001-REV",
+    "Amount": "45000.00",
+    "IssueDate": "2025-11-09",
+    "DueDate": "2025-11-15",
+    "InvoiceItem": {
+      "ItemCode": "P001",
+      "Description": "HP Laptop 15\" - Updated",
+      "Quantity": 15,
+      "Unit": "unit",
+      "UnitPrice": 3000.00,
+      "Subtotal": 45000.00,
+      "TaxAmount": 0.00,
+      "Total": 45000.00
+    }
+  }
+]

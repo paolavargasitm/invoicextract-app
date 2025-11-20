@@ -1,0 +1,35 @@
+{
+  "name": "invoicextract",
+  "version": "1.0.0",
+  "description": "Automated test for InvoiceExtract Project",
+  "main": "index.js",
+  "scripts": {
+    "test": "cucumber-js",
+    "test:parallel": "cucumber-js --parallel 2",
+    "test:tag": "cucumber-js --tags",
+    "test:feature": "cucumber-js features/",
+    "test:login": "cucumber-js --tags @login",
+    "test:smoke": "cucumber-js --tags @smoke",
+    "test:roles": "cucumber-js --tags @roles",
+    "test:views": "cucumber-js --tags @views",
+    "test:api": "cucumber-js features/api-users.feature",
+    "report": "node src/support/report.js",
+    "report:single": "npm run report && node src/support/report-single.js",
+    "report:open": "npm run report:single && open reports/report-standalone.html",
+    "test:report": "npm run test || true && npm run report",
+    "clean": "rm -rf reports && mkdir -p reports"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@cucumber/cucumber": "^12.2.0",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^24.10.0",
+    "cucumber-html-reporter": "^7.2.0",
+    "dotenv": "^17.2.3",
+    "multiple-cucumber-html-reporter": "^3.9.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,73 @@
+name: Cucumber Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps chromium
+    
+    - name: Run tests
+      run: npm test
+      continue-on-error: true
+    
+    - name: Generate report
+      if: always()
+      run: npm run report
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: cucumber-report-${{ matrix.node-version }}
+        path: reports/
+        retention-days: 30
+    
+    - name: Upload screenshots
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: screenshots-${{ matrix.node-version }}
+        path: reports/screenshots/
+        retention-days: 7
+    
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          if (fs.existsSync('reports/cucumber-report.json')) {
+            const report = JSON.parse(fs.readFileSync('reports/cucumber-report.json', 'utf8'));
+            const summary = `## Test Results\n\nTests completed. Check the artifacts for detailed report.`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+          }

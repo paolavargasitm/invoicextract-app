@@ -1,0 +1,67 @@
+name: Run Tests and Generate Report
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Create .env file
+        run: |
+          echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
+          echo "KEYCLOAK_URL=${{ secrets.KEYCLOAK_URL }}" >> .env
+          echo "ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}" >> .env
+          echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> .env
+          echo "FINANCE_USERNAME=${{ secrets.FINANCE_USERNAME }}" >> .env
+          echo "FINANCE_PASSWORD=${{ secrets.FINANCE_PASSWORD }}" >> .env
+          echo "TECHNICIAN_USERNAME=${{ secrets.TECHNICIAN_USERNAME }}" >> .env
+          echo "TECHNICIAN_PASSWORD=${{ secrets.TECHNICIAN_PASSWORD }}" >> .env
+
+      - name: Run tests
+        run: npm test
+        continue-on-error: true
+
+      - name: Generate HTML report
+        if: always()
+        run: npm run report
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-test-report
+          path: reports/
+          retention-days: 5
+
+      - name: Upload test screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-screenshots
+          path: reports/**/*.png
+          retention-days: 5
+          if-no-files-found: ignore

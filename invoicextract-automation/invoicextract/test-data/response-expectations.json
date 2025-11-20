@@ -1,0 +1,56 @@
+[
+  {
+    "testCaseId": "get-all-invoices",
+    "statusCode": 200,
+    "responseSchema": null,
+    "requiredFields": [],
+    "optionalFields": [],
+    "isArray": true
+  },
+  {
+    "testCaseId": "get-invoice-by-id",
+    "statusCode": 200,
+    "responseSchema": {
+      "id": "number",
+      "status": "string",
+      "documentType": "string",
+      "documentNumber": "string",
+      "amount": "number"
+    },
+    "requiredFields": ["id", "status", "documentNumber"],
+    "optionalFields": ["documentType", "amount", "issueDate", "dueDate", "receiverTaxId", "senderTaxId", "items"]
+  },
+  {
+    "testCaseId": "create-invoice",
+    "statusCode": 201,
+    "responseSchema": {
+      "id": "number",
+      "status": "string",
+      "documentType": "string",
+      "documentNumber": "string",
+      "receiverTaxId": "string",
+      "senderTaxId": "string",
+      "amount": "number"
+    },
+    "requiredFields": ["id", "documentNumber"],
+    "optionalFields": ["status", "documentType", "receiverTaxId", "senderTaxId", "amount", "issueDate", "dueDate", "items"]
+  },
+  {
+    "testCaseId": "update-invoice",
+    "statusCode": 200,
+    "responseSchema": {
+      "id": "number",
+      "status": "string",
+      "amount": "number"
+    },
+    "requiredFields": ["id"],
+    "optionalFields": ["status", "documentType", "documentNumber", "amount", "items"]
+  },
+  {
+    "testCaseId": "delete-invoice",
+    "statusCode": 204,
+    "responseSchema": null,
+    "requiredFields": [],
+    "optionalFields": []
+  }
+]
