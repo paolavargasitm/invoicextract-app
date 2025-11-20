@@ -164,14 +164,12 @@ services:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
-      keycloak:
-        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/invoices
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_AUTH_SERVER_URL: http://host.docker.internal:8085
       KEYCLOAK_REALM: invoices
       KEYCLOAK_RESOURCE: invoices-backend
       KEYCLOAK_CREDENTIALS_SECRET: TlPOfnP8P30SdR6bRl3WtJSNqM6ojdhA
@@ -222,8 +220,6 @@ services:
     container_name: invoicextract-frontend-new
     ports:
       - "3001:80"
-    depends_on:
-      - keycloak
     networks:
       - app_network
 
