@@ -2,6 +2,7 @@ import { World, IWorldOptions, setWorldConstructor } from '@cucumber/cucumber';
 import { Browser, BrowserContext, Page, chromium, APIRequestContext, request } from '@playwright/test';
 import { PageManager } from './page-manager';
 import { urls } from './fixtures';
+import { config } from './config';
 
 export interface ICustomWorld extends World {
   browser?: Browser;
@@ -53,9 +54,12 @@ export class CustomWorld extends World implements ICustomWorld {
    * Initialize browser context for UI tests only
    */
   async initBrowser() {
+    const headlessMode = this.parameters.headless ?? config.browser.headless ?? true;
+    const slowMo = this.parameters.slowMo ?? config.browser.slowMo ?? 0;
+    
     this.browser = await chromium.launch({
-      headless: this.parameters.headless !== false,
-      slowMo: this.parameters.slowMo || 0
+      headless: headlessMode,
+      slowMo: slowMo
     });
     this.context = await this.browser.newContext();
     this.page = await this.context.newPage();

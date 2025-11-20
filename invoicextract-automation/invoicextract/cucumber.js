@@ -14,8 +14,8 @@ module.exports = {
       snippetInterface: 'async-await'
     },
     worldParameters: {
-      headless: false,
-      slowMo: 0
+      headless: process.env.HEADLESS === 'true' || process.env.HEADLESS === '1' || process.env.CI === 'true',
+      slowMo: parseInt(process.env.SLOW_MO || '0', 10)
     },
     publishQuiet: true
   }
