@@ -1,8 +1,8 @@
-name: E2E Tests with Playwright
+name: E2E Tests with Cucumber & Playwright
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, feature/github-actions-workflows ]
   pull_request:
     branches: [ main, develop ]
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: 'invoice-extract-frontend-master/package.json'
+          cache-dependency-path: 'invoicextract-automation/invoicextract/package.json'
 
       - name: Create .env file if needed
         run: |
@@ -123,104 +123,54 @@ jobs:
           curl -I ${{ env.KEYCLOAK_URL }}/realms/master/.well-known/openid-configuration
           echo "✅ Keycloak is accessible!"
 
-      - name: Install Playwright and dependencies
-        working-directory: ./invoice-extract-frontend-master
+      - name: Install dependencies and Playwright browsers
+        working-directory: ./invoicextract-automation/invoicextract
         run: |
-          # Install Playwright if not in package.json
-          npm install --save-dev @playwright/test@latest
-          
-          # Install Playwright browsers
+          npm ci
           npx playwright install --with-deps chromium
 
-      - name: Create Playwright config if not exists
-        working-directory: ./invoice-extract-frontend-master
+      - name: Create .env file for tests
+        working-directory: ./invoicextract-automation/invoicextract
         run: |
-          if [ ! -f "playwright.config.ts" ]; then
-            cat > playwright.config.ts << 'EOF'
-          import { defineConfig, devices } from '@playwright/test';
-
-          export default defineConfig({
-            testDir: './tests',
-            fullyParallel: false,
-            forbidOnly: !!process.env.CI,
-            retries: process.env.CI ? 2 : 0,
-            workers: process.env.CI ? 1 : undefined,
-            reporter: [
-              ['html'],
-              ['json', { outputFile: 'test-results/results.json' }],
-              ['junit', { outputFile: 'test-results/junit.xml' }]
-            ],
-            use: {
-              baseURL: 'http://localhost:3001',
-              trace: 'on-first-retry',
-              screenshot: 'only-on-failure',
-              video: 'retain-on-failure',
-            },
-            projects: [
-              {
-                name: 'chromium',
-                use: { ...devices['Desktop Chrome'] },
-              },
-            ],
-            webServer: undefined, // Services already running via docker-compose
-          });
+          cat > .env << 'EOF'
+          BASE_URL=http://localhost:3001
+          FRONTEND_URL=http://localhost:3001
+          KEYCLOAK_BASE_URL=http://localhost:8085
+          KEYCLOAK_ADMIN_URL=http://localhost:8085/admin/master/console/#/invoicextract/users
+          API_BASE_URL=http://localhost:8080/invoicextract
+          HEADLESS=true
+          TIMEOUT=60000
+          PARALLEL_WORKERS=1
+          API_TIMEOUT=30000
           EOF
-          fi
 
-      - name: Create sample E2E test if none exist
-        working-directory: ./invoice-extract-frontend-master
-        run: |
-          mkdir -p tests
-          if [ ! -f "tests/example.spec.ts" ] && [ $(find tests -name "*.spec.ts" -o -name "*.test.ts" | wc -l) -eq 0 ]; then
-            cat > tests/example.spec.ts << 'EOF'
-          import { test, expect } from '@playwright/test';
-
-          test.describe('InvoiceExtract E2E Tests', () => {
-            test('should load frontend application', async ({ page }) => {
-              await page.goto('/');
-              await expect(page).toHaveTitle(/Invoice/i);
-            });
-
-            test('should access database admin', async ({ page }) => {
-              await page.goto('http://localhost:8081');
-              await expect(page.locator('body')).toBeVisible();
-            });
-
-            test('should check backend health', async ({ request }) => {
-              const response = await request.get('http://localhost:8080/invoicextract/actuator/health');
-              expect(response.ok()).toBeTruthy();
-              const body = await response.json();
-              expect(body.status).toBe('UP');
-            });
-
-            test('should access Keycloak', async ({ request }) => {
-              const response = await request.get('http://localhost:8085/realms/master/.well-known/openid-configuration');
-              expect(response.ok()).toBeTruthy();
-            });
-          });
-          EOF
-            echo "✅ Sample test created at tests/example.spec.ts"
-          fi
-
-      - name: Run Playwright tests
-        working-directory: ./invoice-extract-frontend-master
+      - name: Run Cucumber tests
+        working-directory: ./invoicextract-automation/invoicextract
         env:
+          BASE_URL: ${{ env.FRONTEND_URL }}
           FRONTEND_URL: ${{ env.FRONTEND_URL }}
           BACKEND_URL: ${{ env.BACKEND_URL }}
           DB_ADMIN_URL: ${{ env.DB_ADMIN_URL }}
           KEYCLOAK_URL: ${{ env.KEYCLOAK_URL }}
+          KEYCLOAK_BASE_URL: ${{ env.KEYCLOAK_URL }}
+          HEADLESS: true
         run: |
-          npx playwright test --reporter=list,html,json,junit
+          npm test
         continue-on-error: false
 
-      - name: Upload Playwright Report
+      - name: Generate test report
+        if: always()
+        working-directory: ./invoicextract-automation/invoicextract
+        run: |
+          npm run report
+
+      - name: Upload Cucumber HTML Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-${{ github.sha }}
+          name: cucumber-report-${{ github.sha }}
           path: |
-            invoice-extract-frontend-master/playwright-report/
-            invoice-extract-frontend-master/test-results/
+            invoicextract-automation/invoicextract/reports/
           retention-days: 30
 
       - name: Upload test results
@@ -228,16 +178,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results-${{ github.sha }}
-          path: invoice-extract-frontend-master/test-results/
+          path: |
+            invoicextract-automation/invoicextract/reports/
+            invoicextract-automation/invoicextract/test-results/
           retention-days: 14
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          files: invoice-extract-frontend-master/test-results/junit.xml
+          files: invoicextract-automation/invoicextract/reports/**/*.json
           check_name: E2E Test Results
-          comment_title: E2E Test Results
+          comment_title: E2E Cucumber Test Results
         continue-on-error: true
 
       - name: Show service logs on failure
@@ -258,7 +210,7 @@ jobs:
       - name: Generate test summary
         if: always()
         run: |
-          echo "## 🎭 E2E Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 🥒 Cucumber E2E Test Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "### 🌐 Environment URLs Tested" >> $GITHUB_STEP_SUMMARY
@@ -275,16 +227,23 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "### 📊 Test Results" >> $GITHUB_STEP_SUMMARY
-          if [ -f "invoice-extract-frontend-master/test-results/results.json" ]; then
-            echo "Test results available in artifacts" >> $GITHUB_STEP_SUMMARY
+          if [ -d "invoicextract-automation/invoicextract/reports" ]; then
+            echo "- 📁 Cucumber HTML reports generated" >> $GITHUB_STEP_SUMMARY
+            echo "- 📄 Test reports available in artifacts" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "### 📦 Artifacts Generated" >> $GITHUB_STEP_SUMMARY
-          echo "- 📊 Playwright HTML Report" >> $GITHUB_STEP_SUMMARY
-          echo "- 📄 Test Results (JSON/JUnit)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 Cucumber HTML Report" >> $GITHUB_STEP_SUMMARY
+          echo "- 📄 Test Results (JSON)" >> $GITHUB_STEP_SUMMARY
           echo "- 📸 Screenshots (on failure)" >> $GITHUB_STEP_SUMMARY
           echo "- 🎬 Videos (on failure)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 🧪 Test Framework" >> $GITHUB_STEP_SUMMARY
+          echo "- Framework: Cucumber.js + Playwright" >> $GITHUB_STEP_SUMMARY
+          echo "- Location: \`invoicextract-automation/invoicextract/\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Features: BDD scenarios with Gherkin syntax" >> $GITHUB_STEP_SUMMARY
 
       - name: Cleanup
         if: always()
