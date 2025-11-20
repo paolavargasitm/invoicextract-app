@@ -46,10 +46,11 @@ services:
       - ./keycloak/themes/invoicextract:/opt/keycloak/themes/invoicextract:ro
       - ./invoicextract-realm.json:/tmp/invoicextract-realm.json:ro
     healthcheck:
-      test: ["CMD", "bash", "-c", "curl -fsS http://localhost:8085/realms/master/.well-known/openid-configuration > /dev/null || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
     networks:
       - app_network
   mysql:
