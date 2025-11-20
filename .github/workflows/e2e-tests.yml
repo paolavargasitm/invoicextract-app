@@ -50,7 +50,7 @@ jobs:
       - name: Start all services with Docker Compose
         run: |
           echo "Starting infrastructure services..."
-          docker-compose up -d mysql mysql-mappings keycloak-db keycloak kafka
+          docker compose up -d mysql mysql-mappings keycloak-db keycloak kafka 2>/dev/null || docker-compose up -d mysql mysql-mappings keycloak-db keycloak kafka
           
           echo "Waiting for infrastructure to be healthy..."
           sleep 60
@@ -58,13 +58,13 @@ jobs:
       - name: Check infrastructure health
         run: |
           echo "=== Checking MySQL ==="
-          docker-compose ps mysql
+          docker compose ps mysql 2>/dev/null || docker-compose ps mysql
           
           echo "=== Checking Keycloak ==="
-          docker-compose ps keycloak
+          docker compose ps keycloak 2>/dev/null || docker-compose ps keycloak
           
           echo "=== Checking Kafka ==="
-          docker-compose ps kafka
+          docker compose ps kafka 2>/dev/null || docker-compose ps kafka
           
           # Verify Keycloak is responding
           timeout 60 bash -c 'until curl -sf http://localhost:8085/realms/master/.well-known/openid-configuration > /dev/null; do echo "Waiting for Keycloak..."; sleep 5; done'
@@ -72,25 +72,25 @@ jobs:
 
       - name: Run Liquibase migrations
         run: |
-          docker-compose up liquibase liquibase-mappings
+          docker compose up liquibase liquibase-mappings 2>/dev/null || docker-compose up liquibase liquibase-mappings
           echo "=== Liquibase invoices logs ==="
-          docker-compose logs liquibase
+          docker compose logs liquibase 2>/dev/null || docker-compose logs liquibase
           echo "=== Liquibase mappings logs ==="
-          docker-compose logs liquibase-mappings
+          docker compose logs liquibase-mappings 2>/dev/null || docker-compose logs liquibase-mappings
 
       - name: Start application services
         run: |
           echo "Starting backend application..."
-          docker-compose up -d app
+          docker compose up -d app 2>/dev/null || docker-compose up -d app
           
           echo "Starting mapping service..."
-          docker-compose up -d mapping-service
+          docker compose up -d mapping-service 2>/dev/null || docker-compose up -d mapping-service
           
           echo "Starting Adminer (Database Admin)..."
-          docker-compose up -d adminer
+          docker compose up -d adminer 2>/dev/null || docker-compose up -d adminer
           
           echo "Starting frontend..."
-          docker-compose up -d frontend-new
+          docker compose up -d frontend-new 2>/dev/null || docker-compose up -d frontend-new
           
           echo "Waiting for services to initialize..."
           sleep 45
@@ -98,7 +98,7 @@ jobs:
       - name: Verify all services are accessible
         run: |
           echo "=== Service Status ==="
-          docker-compose ps
+          docker compose ps 2>/dev/null || docker-compose ps
           
           echo ""
           echo "=== Testing URL: Frontend (${{ env.FRONTEND_URL }}) ==="
@@ -162,7 +162,7 @@ jobs:
         if: always()
         working-directory: ./invoicextract-automation/invoicextract
         run: |
-          npm run report
+          npm run report || echo "Report generation completed with warnings"
 
       - name: Upload Cucumber HTML Report
         if: always()
@@ -196,16 +196,16 @@ jobs:
         if: failure()
         run: |
           echo "=== Frontend Logs ==="
-          docker-compose logs frontend-new | tail -100
+          docker compose logs frontend-new 2>/dev/null | tail -100 || docker-compose logs frontend-new 2>/dev/null | tail -100 || echo "Frontend logs not available"
           echo ""
           echo "=== Backend Logs ==="
-          docker-compose logs app | tail -100
+          docker compose logs app 2>/dev/null | tail -100 || docker-compose logs app 2>/dev/null | tail -100 || echo "Backend logs not available"
           echo ""
           echo "=== MySQL Logs ==="
-          docker-compose logs mysql | tail -50
+          docker compose logs mysql 2>/dev/null | tail -50 || docker-compose logs mysql 2>/dev/null | tail -50 || echo "MySQL logs not available"
           echo ""
           echo "=== Keycloak Logs ==="
-          docker-compose logs keycloak | tail -50
+          docker compose logs keycloak 2>/dev/null | tail -50 || docker-compose logs keycloak 2>/dev/null | tail -50 || echo "Keycloak logs not available"
 
       - name: Generate test summary
         if: always()
@@ -222,7 +222,7 @@ jobs:
           
           echo "### 🐳 Services Status" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          docker-compose ps >> $GITHUB_STEP_SUMMARY
+          docker compose ps 2>/dev/null || echo "Services information not available" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -248,5 +248,5 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          docker-compose down -v
-          docker system prune -f
+          docker compose down -v 2>/dev/null || docker-compose down -v 2>/dev/null || true
+          docker system prune -f || true
