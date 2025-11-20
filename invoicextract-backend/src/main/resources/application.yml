@@ -41,8 +41,8 @@ spring:
       resourceserver:
         jwt:
           # Use JWKS endpoint to validate tokens regardless of issuer hostname
-          jwk-set-uri: http://keycloak:8080/realms/invoicextract/protocol/openid-connect/certs
-          # issuer-uri: http://keycloak:8080/realms/invoicextract
+          jwk-set-uri: ${KEYCLOAK_AUTH_SERVER_URL:http://keycloak:8080}/realms/${KEYCLOAK_REALM:invoicextract}/protocol/openid-connect/certs
+          # issuer-uri: ${KEYCLOAK_AUTH_SERVER_URL:http://keycloak:8080}/realms/${KEYCLOAK_REALM:invoicextract}
 
 server:
   servlet:
