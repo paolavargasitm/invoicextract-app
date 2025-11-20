@@ -30,8 +30,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: 'invoicextract-automation/invoicextract/package.json'
 
       - name: Create .env file if needed
         run: |
