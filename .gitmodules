@@ -1,3 +1,0 @@
-[submodule "invoicextract-automation/invoicextract"]
-	path = invoicextract-automation/invoicextract
-	url = https://github.com/TatianaMurillo/invoicextract.git
