@@ -1,13 +1,26 @@
-# E2E Testing with Playwright - Guide
+# E2E Testing with Cucumber & Playwright - Guide
 
 ## 🎭 Overview
 
-The E2E test workflow (`e2e-tests.yml`) runs Playwright tests against your complete InvoiceExtract application running in Docker. All services use the localhost URLs you specified:
+The E2E test workflow (`e2e-tests.yml`) runs Cucumber BDD tests with Playwright against your complete InvoiceExtract application running in Docker. All services use the localhost URLs you specified:
 
 - **Frontend**: `http://localhost:3001`
 - **Database Admin (Adminer)**: `http://localhost:8081`
 - **Backend API**: `http://localhost:8080/invoicextract`
 - **Keycloak**: `http://localhost:8085`
+
+## 🔐 Authentication Configuration
+
+The tests use pre-configured Keycloak credentials that are automatically imported from `invoicextract-realm.json`:
+
+```bash
+CLIENT_ID=invoices-backend
+CLIENT_SECRET=TlPOfnP8P30SdR6bRl3WtJSNqM6ojdhA
+```
+
+These credentials are **consistent across all workflow runs** thanks to automatic realm import.
+
+📖 See [KEYCLOAK_CONFIGURATION.md](../docs/KEYCLOAK_CONFIGURATION.md) for detailed Keycloak setup information.
 
 ## 🚀 Quick Start
 

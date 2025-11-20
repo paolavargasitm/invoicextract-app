@@ -53,6 +53,11 @@ jobs:
           echo "Waiting for infrastructure to be healthy..."
           sleep 60
 
+      - name: Import Keycloak realm configuration
+        run: |
+          chmod +x .github/scripts/import-keycloak-realm.sh
+          .github/scripts/import-keycloak-realm.sh
+
       - name: Check infrastructure health
         run: |
           echo "=== Checking MySQL ==="
@@ -99,8 +104,12 @@ jobs:
           docker compose ps 2>/dev/null || docker-compose ps
           
           echo ""
+          echo "=== Checking Backend Logs ==="
+          docker logs invoicextract-app --tail=50
+          
+          echo ""
           echo "=== Testing URL: Frontend (${{ env.FRONTEND_URL }}) ==="
-          timeout 60 bash -c 'until curl -sf ${{ env.FRONTEND_URL }} > /dev/null; do echo "Waiting for frontend..."; sleep 3; done'
+          timeout 120 bash -c 'until curl -sf ${{ env.FRONTEND_URL }} > /dev/null; do echo "Waiting for frontend..."; sleep 3; done'
           curl -I ${{ env.FRONTEND_URL }}
           echo "✅ Frontend is accessible!"
           
@@ -112,13 +121,13 @@ jobs:
           
           echo ""
           echo "=== Testing URL: Backend API (${{ env.BACKEND_URL }}) ==="
-          timeout 60 bash -c 'until curl -sf ${{ env.BACKEND_URL }}/actuator/health > /dev/null; do echo "Waiting for backend..."; sleep 3; done'
-          curl ${{ env.BACKEND_URL }}/actuator/health
+          timeout 180 bash -c 'until curl -sf ${{ env.BACKEND_URL }}/actuator/health > /dev/null; do echo "Waiting for backend..."; sleep 5; done'
+          curl ${{ env.BACKEND_URL }}/actuator/health | jq . || curl ${{ env.BACKEND_URL }}/actuator/health
           echo "✅ Backend API is accessible!"
           
           echo ""
           echo "=== Testing URL: Keycloak (${{ env.KEYCLOAK_URL }}) ==="
-          curl -I ${{ env.KEYCLOAK_URL }}/realms/master/.well-known/openid-configuration
+          curl -I ${{ env.KEYCLOAK_URL }}/realms/invoices/.well-known/openid-configuration
           echo "✅ Keycloak is accessible!"
 
       - name: Install dependencies and Playwright browsers
@@ -131,16 +140,36 @@ jobs:
         working-directory: ./invoicextract-automation/invoicextract
         run: |
           cat > .env << 'EOF'
+          # Base URLs
           BASE_URL=http://localhost:3001
           FRONTEND_URL=http://localhost:3001
           KEYCLOAK_BASE_URL=http://localhost:8085
-          KEYCLOAK_ADMIN_URL=http://localhost:8085/admin/master/console/#/invoicextract/users
           API_BASE_URL=http://localhost:8080/invoicextract
+          
+          # Browser Configuration
           HEADLESS=true
+          SLOW_MO=0
+          
+          # Test Configuration
           TIMEOUT=60000
           PARALLEL_WORKERS=1
+          
+          # API Configuration
           API_TIMEOUT=30000
+          
+          # Test Credentials by Role
+          ADMIN_USERNAME=admin
+          ADMIN_PASSWORD=admin
+          
+          FINANCE_USERNAME=finance_user
+          FINANCE_PASSWORD=finance_password
+          
+          TECHNICIAN_USERNAME=technician_user
+          TECHNICIAN_PASSWORD=technician_password
           EOF
+          
+          echo "✅ .env file created with test configuration"
+          cat .env
 
       - name: Run Cucumber tests
         working-directory: ./invoicextract-automation/invoicextract

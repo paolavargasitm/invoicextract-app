@@ -44,6 +44,7 @@ services:
       - "8085:8080"
     volumes:
       - ./keycloak/themes/invoicextract:/opt/keycloak/themes/invoicextract:ro
+      - ./invoicextract-realm.json:/tmp/invoicextract-realm.json:ro
     healthcheck:
       test: ["CMD", "bash", "-c", "curl -fsS http://localhost:8085/realms/master/.well-known/openid-configuration > /dev/null || exit 1"]
       interval: 10s
@@ -162,11 +163,23 @@ services:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
+      keycloak:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/invoices
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: invoices
+      KEYCLOAK_RESOURCE: invoices-backend
+      KEYCLOAK_CREDENTIALS_SECRET: TlPOfnP8P30SdR6bRl3WtJSNqM6ojdhA
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/invoicextract/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
     networks:
       - app_network
 
