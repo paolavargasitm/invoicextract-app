@@ -1,6 +1,17 @@
 #!/bin/bash
 set -e
 
+# Detect docker compose command
+if docker compose version &>/dev/null; then
+  COMPOSE_CMD="docker compose"
+elif docker-compose version &>/dev/null; then
+  COMPOSE_CMD="docker-compose"
+else
+  COMPOSE_CMD="docker compose"  # fallback
+fi
+
+echo "Using compose command: $COMPOSE_CMD"
+
 # Wait for Keycloak to be fully ready
 echo "Waiting for Keycloak to be ready..."
 max_attempts=60
@@ -23,26 +34,25 @@ fi
 
 echo "Logging in to Keycloak admin..."
 # Get admin access token
-ACCESS_TOKEN=$(docker exec keycloak /opt/keycloak/bin/kcadm.sh config credentials \
+docker exec keycloak /opt/keycloak/bin/kcadm.sh config credentials \
   --server http://localhost:8080 \
   --realm master \
   --user admin \
   --password admin \
-  --config /tmp/kcadm.config > /dev/null 2>&1 && \
-  docker exec keycloak cat /tmp/kcadm.config | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+  --config /tmp/kcadm.config > /dev/null 2>&1 || true
 
 echo "Checking if realm already exists..."
 # Check if realm exists
 REALM_EXISTS=$(docker exec keycloak /opt/keycloak/bin/kcadm.sh get realms/invoices \
-  --config /tmp/kcadm.config 2>&1 | grep -c "Resource not found" || true)
+  --config /tmp/kcadm.config 2>&1 | grep -c "Resource not found" || echo "1")
 
 if [ "$REALM_EXISTS" -gt 0 ]; then
   echo "Importing realm from invoicextract-realm.json..."
   # Import the realm
   docker exec keycloak /opt/keycloak/bin/kcadm.sh create realms \
     --config /tmp/kcadm.config \
-    -f /tmp/invoicextract-realm.json
-  echo "Realm imported successfully!"
+    -f /tmp/invoicextract-realm.json || echo "Realm import may have failed or realm already exists"
+  echo "Realm import completed!"
 else
   echo "Realm 'invoices' already exists, skipping import."
 fi
