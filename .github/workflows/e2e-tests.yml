@@ -48,7 +48,11 @@ jobs:
       - name: Start all services with Docker Compose
         run: |
           echo "Starting infrastructure services..."
-          docker compose up -d mysql mysql-mappings keycloak-db keycloak kafka 2>/dev/null || docker-compose up -d mysql mysql-mappings keycloak-db keycloak kafka
+          if docker compose version &>/dev/null; then
+            docker compose up -d mysql mysql-mappings keycloak-db keycloak kafka
+          else
+            docker-compose up -d mysql mysql-mappings keycloak-db keycloak kafka
+          fi
           
           echo "Waiting for infrastructure to be healthy..."
           sleep 60
@@ -61,13 +65,25 @@ jobs:
       - name: Check infrastructure health
         run: |
           echo "=== Checking MySQL ==="
-          docker compose ps mysql 2>/dev/null || docker-compose ps mysql
+          if docker compose version &>/dev/null; then
+            docker compose ps mysql
+          else
+            docker-compose ps mysql
+          fi
           
           echo "=== Checking Keycloak ==="
-          docker compose ps keycloak 2>/dev/null || docker-compose ps keycloak
+          if docker compose version &>/dev/null; then
+            docker compose ps keycloak
+          else
+            docker-compose ps keycloak
+          fi
           
           echo "=== Checking Kafka ==="
-          docker compose ps kafka 2>/dev/null || docker-compose ps kafka
+          if docker compose version &>/dev/null; then
+            docker compose ps kafka
+          else
+            docker-compose ps kafka
+          fi
           
           # Verify Keycloak is responding
           timeout 60 bash -c 'until curl -sf http://localhost:8085/realms/master/.well-known/openid-configuration > /dev/null; do echo "Waiting for Keycloak..."; sleep 5; done'
@@ -75,25 +91,45 @@ jobs:
 
       - name: Run Liquibase migrations
         run: |
-          docker compose up liquibase liquibase-mappings 2>/dev/null || docker-compose up liquibase liquibase-mappings
+          if docker compose version &>/dev/null; then
+            docker compose up liquibase liquibase-mappings
+          else
+            docker-compose up liquibase liquibase-mappings
+          fi
+          
           echo "=== Liquibase invoices logs ==="
-          docker compose logs liquibase 2>/dev/null || docker-compose logs liquibase
+          if docker compose version &>/dev/null; then
+            docker compose logs liquibase
+          else
+            docker-compose logs liquibase
+          fi
+          
           echo "=== Liquibase mappings logs ==="
-          docker compose logs liquibase-mappings 2>/dev/null || docker-compose logs liquibase-mappings
+          if docker compose version &>/dev/null; then
+            docker compose logs liquibase-mappings
+          else
+            docker-compose logs liquibase-mappings
+          fi
 
       - name: Start application services
         run: |
+          if docker compose version &>/dev/null; then
+            COMPOSE_CMD="docker compose"
+          else
+            COMPOSE_CMD="docker-compose"
+          fi
+          
           echo "Starting backend application..."
-          docker compose up -d app 2>/dev/null || docker-compose up -d app
+          $COMPOSE_CMD up -d app
           
           echo "Starting mapping service..."
-          docker compose up -d mapping-service 2>/dev/null || docker-compose up -d mapping-service
+          $COMPOSE_CMD up -d mapping-service
           
           echo "Starting Adminer (Database Admin)..."
-          docker compose up -d adminer 2>/dev/null || docker-compose up -d adminer
+          $COMPOSE_CMD up -d adminer
           
           echo "Starting frontend..."
-          docker compose up -d frontend-new 2>/dev/null || docker-compose up -d frontend-new
+          $COMPOSE_CMD up -d frontend-new
           
           echo "Waiting for services to initialize..."
           sleep 45
@@ -101,7 +137,11 @@ jobs:
       - name: Verify all services are accessible
         run: |
           echo "=== Service Status ==="
-          docker compose ps 2>/dev/null || docker-compose ps
+          if docker compose version &>/dev/null; then
+            docker compose ps
+          else
+            docker-compose ps
+          fi
           
           echo ""
           echo "=== Checking Backend Logs ==="
@@ -227,17 +267,23 @@ jobs:
       - name: Show service logs on failure
         if: failure()
         run: |
+          if docker compose version &>/dev/null; then
+            COMPOSE_CMD="docker compose"
+          else
+            COMPOSE_CMD="docker-compose"
+          fi
+          
           echo "=== Frontend Logs ==="
-          docker compose logs frontend-new 2>/dev/null | tail -100 || docker-compose logs frontend-new 2>/dev/null | tail -100 || echo "Frontend logs not available"
+          $COMPOSE_CMD logs frontend-new | tail -100 || echo "Frontend logs not available"
           echo ""
           echo "=== Backend Logs ==="
-          docker compose logs app 2>/dev/null | tail -100 || docker-compose logs app 2>/dev/null | tail -100 || echo "Backend logs not available"
+          $COMPOSE_CMD logs app | tail -100 || echo "Backend logs not available"
           echo ""
           echo "=== MySQL Logs ==="
-          docker compose logs mysql 2>/dev/null | tail -50 || docker-compose logs mysql 2>/dev/null | tail -50 || echo "MySQL logs not available"
+          $COMPOSE_CMD logs mysql | tail -50 || echo "MySQL logs not available"
           echo ""
           echo "=== Keycloak Logs ==="
-          docker compose logs keycloak 2>/dev/null | tail -50 || docker-compose logs keycloak 2>/dev/null | tail -50 || echo "Keycloak logs not available"
+          $COMPOSE_CMD logs keycloak | tail -50 || echo "Keycloak logs not available"
 
       - name: Generate test summary
         if: always()
@@ -280,5 +326,9 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          docker compose down -v 2>/dev/null || docker-compose down -v 2>/dev/null || true
+          if docker compose version &>/dev/null; then
+            docker compose down -v || true
+          else
+            docker-compose down -v || true
+          fi
           docker system prune -f || true
