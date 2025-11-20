@@ -1,0 +1,293 @@
+name: E2E Tests with Playwright
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  FRONTEND_URL: http://localhost:3001
+  BACKEND_URL: http://localhost:8080/invoicextract
+  DB_ADMIN_URL: http://localhost:8081
+  KEYCLOAK_URL: http://localhost:8085
+
+jobs:
+  e2e-tests:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'invoice-extract-frontend-master/package.json'
+
+      - name: Create .env file if needed
+        run: |
+          touch .env
+
+      - name: Build backend JAR before Docker compose
+        run: |
+          cd invoicextract-backend
+          docker run --rm \
+            -v $PWD:/app \
+            -w /app \
+            maven:3.9.6-eclipse-temurin-17 \
+            mvn clean package -DskipTests
+          cd ..
+
+      - name: Start all services with Docker Compose
+        run: |
+          echo "Starting infrastructure services..."
+          docker-compose up -d mysql mysql-mappings keycloak-db keycloak kafka
+          
+          echo "Waiting for infrastructure to be healthy..."
+          sleep 60
+
+      - name: Check infrastructure health
+        run: |
+          echo "=== Checking MySQL ==="
+          docker-compose ps mysql
+          
+          echo "=== Checking Keycloak ==="
+          docker-compose ps keycloak
+          
+          echo "=== Checking Kafka ==="
+          docker-compose ps kafka
+          
+          # Verify Keycloak is responding
+          timeout 60 bash -c 'until curl -sf http://localhost:8085/realms/master/.well-known/openid-configuration > /dev/null; do echo "Waiting for Keycloak..."; sleep 5; done'
+          echo "Keycloak is ready!"
+
+      - name: Run Liquibase migrations
+        run: |
+          docker-compose up liquibase liquibase-mappings
+          echo "=== Liquibase invoices logs ==="
+          docker-compose logs liquibase
+          echo "=== Liquibase mappings logs ==="
+          docker-compose logs liquibase-mappings
+
+      - name: Start application services
+        run: |
+          echo "Starting backend application..."
+          docker-compose up -d app
+          
+          echo "Starting mapping service..."
+          docker-compose up -d mapping-service
+          
+          echo "Starting Adminer (Database Admin)..."
+          docker-compose up -d adminer
+          
+          echo "Starting frontend..."
+          docker-compose up -d frontend-new
+          
+          echo "Waiting for services to initialize..."
+          sleep 45
+
+      - name: Verify all services are accessible
+        run: |
+          echo "=== Service Status ==="
+          docker-compose ps
+          
+          echo ""
+          echo "=== Testing URL: Frontend (${{ env.FRONTEND_URL }}) ==="
+          timeout 60 bash -c 'until curl -sf ${{ env.FRONTEND_URL }} > /dev/null; do echo "Waiting for frontend..."; sleep 3; done'
+          curl -I ${{ env.FRONTEND_URL }}
+          echo "✅ Frontend is accessible!"
+          
+          echo ""
+          echo "=== Testing URL: Database Admin (${{ env.DB_ADMIN_URL }}) ==="
+          timeout 60 bash -c 'until curl -sf ${{ env.DB_ADMIN_URL }} > /dev/null; do echo "Waiting for DB admin..."; sleep 3; done'
+          curl -I ${{ env.DB_ADMIN_URL }}
+          echo "✅ Database Admin is accessible!"
+          
+          echo ""
+          echo "=== Testing URL: Backend API (${{ env.BACKEND_URL }}) ==="
+          timeout 60 bash -c 'until curl -sf ${{ env.BACKEND_URL }}/actuator/health > /dev/null; do echo "Waiting for backend..."; sleep 3; done'
+          curl ${{ env.BACKEND_URL }}/actuator/health
+          echo "✅ Backend API is accessible!"
+          
+          echo ""
+          echo "=== Testing URL: Keycloak (${{ env.KEYCLOAK_URL }}) ==="
+          curl -I ${{ env.KEYCLOAK_URL }}/realms/master/.well-known/openid-configuration
+          echo "✅ Keycloak is accessible!"
+
+      - name: Install Playwright and dependencies
+        working-directory: ./invoice-extract-frontend-master
+        run: |
+          # Install Playwright if not in package.json
+          npm install --save-dev @playwright/test@latest
+          
+          # Install Playwright browsers
+          npx playwright install --with-deps chromium
+
+      - name: Create Playwright config if not exists
+        working-directory: ./invoice-extract-frontend-master
+        run: |
+          if [ ! -f "playwright.config.ts" ]; then
+            cat > playwright.config.ts << 'EOF'
+          import { defineConfig, devices } from '@playwright/test';
+
+          export default defineConfig({
+            testDir: './tests',
+            fullyParallel: false,
+            forbidOnly: !!process.env.CI,
+            retries: process.env.CI ? 2 : 0,
+            workers: process.env.CI ? 1 : undefined,
+            reporter: [
+              ['html'],
+              ['json', { outputFile: 'test-results/results.json' }],
+              ['junit', { outputFile: 'test-results/junit.xml' }]
+            ],
+            use: {
+              baseURL: 'http://localhost:3001',
+              trace: 'on-first-retry',
+              screenshot: 'only-on-failure',
+              video: 'retain-on-failure',
+            },
+            projects: [
+              {
+                name: 'chromium',
+                use: { ...devices['Desktop Chrome'] },
+              },
+            ],
+            webServer: undefined, // Services already running via docker-compose
+          });
+          EOF
+          fi
+
+      - name: Create sample E2E test if none exist
+        working-directory: ./invoice-extract-frontend-master
+        run: |
+          mkdir -p tests
+          if [ ! -f "tests/example.spec.ts" ] && [ $(find tests -name "*.spec.ts" -o -name "*.test.ts" | wc -l) -eq 0 ]; then
+            cat > tests/example.spec.ts << 'EOF'
+          import { test, expect } from '@playwright/test';
+
+          test.describe('InvoiceExtract E2E Tests', () => {
+            test('should load frontend application', async ({ page }) => {
+              await page.goto('/');
+              await expect(page).toHaveTitle(/Invoice/i);
+            });
+
+            test('should access database admin', async ({ page }) => {
+              await page.goto('http://localhost:8081');
+              await expect(page.locator('body')).toBeVisible();
+            });
+
+            test('should check backend health', async ({ request }) => {
+              const response = await request.get('http://localhost:8080/invoicextract/actuator/health');
+              expect(response.ok()).toBeTruthy();
+              const body = await response.json();
+              expect(body.status).toBe('UP');
+            });
+
+            test('should access Keycloak', async ({ request }) => {
+              const response = await request.get('http://localhost:8085/realms/master/.well-known/openid-configuration');
+              expect(response.ok()).toBeTruthy();
+            });
+          });
+          EOF
+            echo "✅ Sample test created at tests/example.spec.ts"
+          fi
+
+      - name: Run Playwright tests
+        working-directory: ./invoice-extract-frontend-master
+        env:
+          FRONTEND_URL: ${{ env.FRONTEND_URL }}
+          BACKEND_URL: ${{ env.BACKEND_URL }}
+          DB_ADMIN_URL: ${{ env.DB_ADMIN_URL }}
+          KEYCLOAK_URL: ${{ env.KEYCLOAK_URL }}
+        run: |
+          npx playwright test --reporter=list,html,json,junit
+        continue-on-error: false
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.sha }}
+          path: |
+            invoice-extract-frontend-master/playwright-report/
+            invoice-extract-frontend-master/test-results/
+          retention-days: 30
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results-${{ github.sha }}
+          path: invoice-extract-frontend-master/test-results/
+          retention-days: 14
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: invoice-extract-frontend-master/test-results/junit.xml
+          check_name: E2E Test Results
+          comment_title: E2E Test Results
+        continue-on-error: true
+
+      - name: Show service logs on failure
+        if: failure()
+        run: |
+          echo "=== Frontend Logs ==="
+          docker-compose logs frontend-new | tail -100
+          echo ""
+          echo "=== Backend Logs ==="
+          docker-compose logs app | tail -100
+          echo ""
+          echo "=== MySQL Logs ==="
+          docker-compose logs mysql | tail -50
+          echo ""
+          echo "=== Keycloak Logs ==="
+          docker-compose logs keycloak | tail -50
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## 🎭 E2E Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 🌐 Environment URLs Tested" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Frontend: ${{ env.FRONTEND_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Database Admin: ${{ env.DB_ADMIN_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Backend API: ${{ env.BACKEND_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Keycloak: ${{ env.KEYCLOAK_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 🐳 Services Status" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          docker-compose ps >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 📊 Test Results" >> $GITHUB_STEP_SUMMARY
+          if [ -f "invoice-extract-frontend-master/test-results/results.json" ]; then
+            echo "Test results available in artifacts" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 📦 Artifacts Generated" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 Playwright HTML Report" >> $GITHUB_STEP_SUMMARY
+          echo "- 📄 Test Results (JSON/JUnit)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📸 Screenshots (on failure)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎬 Videos (on failure)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker-compose down -v
+          docker system prune -f

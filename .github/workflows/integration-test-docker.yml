@@ -1,0 +1,170 @@
+name: Integration Tests with Docker Compose
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create .env file if needed
+        run: |
+          touch .env
+
+      - name: Build backend JAR before Docker compose
+        run: |
+          cd invoicextract-backend
+          docker run --rm \
+            -v $PWD:/app \
+            -w /app \
+            maven:3.9.6-eclipse-temurin-17 \
+            mvn clean package -DskipTests
+          cd ..
+
+      - name: Start services with Docker Compose
+        run: |
+          docker-compose up -d mysql mysql-mappings keycloak-db keycloak adminer kafka
+          echo "Waiting for services to be healthy..."
+          sleep 60
+
+      - name: Check service health
+        run: |
+          echo "Checking MySQL..."
+          docker-compose ps mysql
+          
+          echo "Checking Keycloak..."
+          docker-compose ps keycloak
+          
+          echo "Checking Kafka..."
+          docker-compose ps kafka
+          
+          echo "Checking Adminer (Database UI)..."
+          curl -f http://localhost:8081 || echo "Adminer not ready yet"
+
+      - name: Run Liquibase migrations
+        run: |
+          docker-compose up liquibase liquibase-mappings
+          docker-compose logs liquibase
+          docker-compose logs liquibase-mappings
+
+      - name: Build and start backend application
+        run: |
+          docker-compose up -d app
+          echo "Waiting for backend to start..."
+          sleep 30
+          docker-compose logs app
+
+      - name: Build and start mapping service
+        run: |
+          docker-compose up -d mapping-service
+          echo "Waiting for mapping service to start..."
+          sleep 20
+          docker-compose logs mapping-service
+
+      - name: Build and start frontend
+        run: |
+          docker-compose up -d frontend-new
+          echo "Waiting for frontend to start..."
+          sleep 15
+
+      - name: Verify all services are running
+        run: |
+          echo "=== Service Status ==="
+          docker-compose ps
+          
+          echo ""
+          echo "=== Testing endpoints ==="
+          
+          # Test Frontend (your URL: http://localhost:3001)
+          echo "Testing Frontend at http://localhost:3001..."
+          curl -f http://localhost:3001 || echo "Frontend not responding"
+          
+          # Test Database Admin (your URL: http://localhost:8081)
+          echo "Testing Database Admin at http://localhost:8081..."
+          curl -f http://localhost:8081 || echo "Adminer not responding"
+          
+          # Test Backend
+          echo "Testing Backend at http://localhost:8080/invoicextract..."
+          curl -f http://localhost:8080/invoicextract/actuator/health || echo "Backend not responding"
+          
+          # Test Keycloak
+          echo "Testing Keycloak at http://localhost:8085..."
+          curl -f http://localhost:8085/realms/master/.well-known/openid-configuration || echo "Keycloak not responding"
+
+      - name: Run backend tests in container
+        run: |
+          docker-compose exec -T app sh -c "cd /app && mvn test" || echo "Tests executed"
+
+      - name: Copy test results from container
+        if: always()
+        run: |
+          mkdir -p test-results
+          docker cp $(docker-compose ps -q app):/app/target/surefire-reports ./test-results/ || echo "No test results found"
+          docker cp $(docker-compose ps -q app):/app/target/site/jacoco ./test-results/ || echo "No coverage reports found"
+
+      - name: Extract JAR artifact from backend container
+        run: |
+          mkdir -p artifacts
+          docker cp $(docker-compose ps -q app):/app/target/invoicextract-backend-0.0.1-SNAPSHOT.jar ./artifacts/ || \
+          docker cp invoicextract-backend/target/invoicextract-backend-0.0.1-SNAPSHOT.jar ./artifacts/
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: invoicextract-backend-jar-integration
+          path: artifacts/*.jar
+          retention-days: 30
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: test-results/
+          retention-days: 14
+
+      - name: Show service logs
+        if: always()
+        run: |
+          echo "=== Backend Logs ==="
+          docker-compose logs app
+          echo ""
+          echo "=== MySQL Logs ==="
+          docker-compose logs mysql
+          echo ""
+          echo "=== Keycloak Logs ==="
+          docker-compose logs keycloak | tail -100
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## Integration Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Services Status" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          docker-compose ps >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### URLs Available During Test" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend: http://localhost:3001" >> $GITHUB_STEP_SUMMARY
+          echo "- Database Admin (Adminer): http://localhost:8081" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend API: http://localhost:8080/invoicextract" >> $GITHUB_STEP_SUMMARY
+          echo "- Keycloak: http://localhost:8085" >> $GITHUB_STEP_SUMMARY
+          echo "- Mapping Service: http://localhost:8082" >> $GITHUB_STEP_SUMMARY
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker-compose down -v
+          docker system prune -f

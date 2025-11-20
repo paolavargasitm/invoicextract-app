@@ -222,10 +222,44 @@ Valores por defecto de ejemplo alineados con Docker local:
 3. Descarga/lee adjuntos, los guarda en `pathDowload`.
 4. Envía a backend para procesamiento con `urlInvoice` (proceso asíncrono vía Kafka).
 
+## 🔄 CI/CD con GitHub Actions
+
+La aplicación incluye flujos de trabajo automatizados para pruebas y construcción utilizando **GitHub Actions** con entornos Docker.
+
+### 📋 Workflows Disponibles
+
+| Workflow | Descripción | Artefactos |
+|----------|-------------|------------|
+| **Backend Build and Test** | Pruebas rápidas del backend con servicios Docker | JAR del backend, reportes de pruebas |
+| **Test and Build** | Pruebas completas con todos los servicios | JAR + build del frontend |
+| **Integration Tests** | Pruebas de integración con docker-compose completo | JAR + reportes de integración |
+
+### 🚀 URLs de Prueba (según especificación)
+
+Los workflows utilizan las siguientes URLs durante las pruebas:
+- **Frontend**: `http://localhost:3001` ✅
+- **Database Admin (Adminer)**: `http://localhost:8081` ✅
+- **Backend API**: `http://localhost:8080/invoicextract`
+- **Keycloak**: `http://localhost:8085`
+
+### 📦 Artefactos Generados
+
+Cada workflow genera:
+- ✅ **JAR del backend**: `invoicextract-backend-0.0.1-SNAPSHOT.jar` (retención: 30 días)
+- ✅ **Reportes de pruebas**: Resultados y cobertura de código (retención: 14 días)
+- ✅ **Build del frontend**: Archivos compilados para producción
+
+📖 **Documentación completa**: Ver [.github/workflows/README.md](.github/workflows/README.md) para instrucciones detalladas.
+
 ## 📁 Estructura del Proyecto
 
 ```
 invoicextract-app/
+├── 📂 .github/workflows/              # CI/CD con GitHub Actions
+│   ├── 📄 backend-test.yml            # Tests del backend (recomendado)
+│   ├── 📄 test-and-build.yml          # Tests completos
+│   ├── 📄 integration-test-docker.yml # Tests de integración
+│   └── 📄 README.md                   # Documentación de workflows
 ├── 📂 invoicextract-backend/          # Aplicación Spring Boot principal
 │   ├── 📂 src/main/java/
 │   │   └── 📂 co/edu/itm/invoiceextract/

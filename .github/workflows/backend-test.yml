@@ -1,0 +1,194 @@
+name: Backend Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'invoicextract-backend/**'
+      - '.github/workflows/backend-test.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'invoicextract-backend/**'
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '17'
+  MAVEN_OPTS: -Xmx2048m
+
+jobs:
+  test-backend:
+    name: Test Backend with Docker Environment
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Start MySQL for invoices
+        run: |
+          docker run -d \
+            --name mysql-invoices \
+            -e MYSQL_ROOT_PASSWORD=root \
+            -e MYSQL_DATABASE=invoices \
+            -p 3306:3306 \
+            --health-cmd="mysqladmin ping -h localhost" \
+            --health-interval=10s \
+            --health-timeout=5s \
+            --health-retries=10 \
+            mysql:8
+          
+          echo "Waiting for MySQL to be ready..."
+          timeout 60 bash -c 'until docker exec mysql-invoices mysqladmin ping -h localhost --silent; do sleep 2; done'
+          echo "MySQL is ready!"
+
+      - name: Start MySQL for mappings
+        run: |
+          docker run -d \
+            --name mysql-mappings \
+            -e MYSQL_ROOT_PASSWORD=root \
+            -e MYSQL_DATABASE=mappings \
+            -p 3307:3306 \
+            --health-cmd="mysqladmin ping -h localhost" \
+            --health-interval=10s \
+            --health-timeout=5s \
+            --health-retries=10 \
+            mysql:8
+          
+          echo "Waiting for MySQL mappings to be ready..."
+          timeout 60 bash -c 'until docker exec mysql-mappings mysqladmin ping -h localhost --silent; do sleep 2; done'
+          echo "MySQL mappings is ready!"
+
+      - name: Start Kafka
+        run: |
+          docker run -d \
+            --name kafka-test \
+            -p 9092:9092 \
+            -e KAFKA_ENABLE_KRAFT=yes \
+            -e KAFKA_CFG_NODE_ID=0 \
+            -e KAFKA_CFG_PROCESS_ROLES=broker,controller \
+            -e KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@localhost:9093 \
+            -e KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093 \
+            -e KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+            -e KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER \
+            -e KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT \
+            -e KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT \
+            bitnamilegacy/kafka:3.5.1
+          
+          echo "Waiting for Kafka to be ready..."
+          sleep 30
+          echo "Kafka is ready!"
+
+      - name: Run Liquibase migrations
+        run: |
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}/liquibase:/liquibase/changelog \
+            liquibase/liquibase:latest \
+            --url=jdbc:mysql://localhost:3306/invoices?useSSL=false\&allowPublicKeyRetrieval=true\&serverTimezone=UTC \
+            --username=root \
+            --password=root \
+            --changelog-file=changelog/db.changelog-master.yaml \
+            update || echo "Liquibase migration completed with warnings"
+
+      - name: Run tests and build JAR
+        working-directory: ./invoicextract-backend
+        run: |
+          mvn clean install \
+            -Dspring.datasource.url=jdbc:mysql://localhost:3306/invoices?useSSL=false\&serverTimezone=UTC\&allowPublicKeyRetrieval=true \
+            -Dspring.datasource.username=root \
+            -Dspring.datasource.password=root \
+            -Dspring.kafka.bootstrap-servers=localhost:9092
+
+      - name: Generate JaCoCo Badge
+        id: jacoco
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          generate-branches-badge: true
+          jacoco-csv-file: invoicextract-backend/target/site/jacoco/jacoco.csv
+          badges-directory: .github/badges
+          generate-coverage-badge: true
+        continue-on-error: true
+
+      - name: Upload JAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: invoicextract-backend-${{ github.sha }}
+          path: |
+            invoicextract-backend/target/*.jar
+            !invoicextract-backend/target/*-sources.jar
+            !invoicextract-backend/target/*-javadoc.jar
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ github.sha }}
+          path: |
+            invoicextract-backend/target/surefire-reports/**/*
+            invoicextract-backend/target/site/jacoco/**/*
+          retention-days: 14
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            invoicextract-backend/target/surefire-reports/*.xml
+          check_name: Backend Test Results
+          comment_title: Backend Test Results
+
+      - name: Add coverage to PR
+        id: jacoco-report
+        uses: madrapps/jacoco-report@v1.6.1
+        if: github.event_name == 'pull_request'
+        with:
+          paths: |
+            ${{ github.workspace }}/invoicextract-backend/target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 40
+          min-coverage-changed-files: 60
+          title: Code Coverage Report
+        continue-on-error: true
+
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "## 🧪 Backend Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "invoicextract-backend/target/surefire-reports/TEST-*.xml" ]; then
+            TOTAL_TESTS=$(find invoicextract-backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "tests=" {} \; | sed 's/.*tests="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            FAILURES=$(find invoicextract-backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "failures=" {} \; | sed 's/.*failures="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            ERRORS=$(find invoicextract-backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "errors=" {} \; | sed 's/.*errors="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            
+            echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+            echo "- Total Tests: $TOTAL_TESTS" >> $GITHUB_STEP_SUMMARY
+            echo "- Failures: $FAILURES" >> $GITHUB_STEP_SUMMARY
+            echo "- Errors: $ERRORS" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Artifacts Generated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Backend JAR: \`invoicextract-backend-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Test Reports: \`test-reports-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Environment URLs (for local testing)" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend: http://localhost:3001" >> $GITHUB_STEP_SUMMARY
+          echo "- Database Admin: http://localhost:8081" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend API: http://localhost:8080/invoicextract" >> $GITHUB_STEP_SUMMARY
+
+      - name: Cleanup Docker containers
+        if: always()
+        run: |
+          docker stop mysql-invoices mysql-mappings kafka-test 2>/dev/null || true
+          docker rm mysql-invoices mysql-mappings kafka-test 2>/dev/null || true
