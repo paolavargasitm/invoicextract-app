@@ -23,6 +23,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Checkout automation submodule manually
+        run: |
+          if [ -d "invoicextract-automation/invoicextract/.git" ]; then
+            cd invoicextract-automation/invoicextract
+            git fetch origin
+            git checkout feat/login
+            git pull origin feat/login
+          else
+            echo "Automation directory structure issue detected"
+            ls -la invoicextract-automation/ || echo "Directory doesn't exist"
+          fi
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
