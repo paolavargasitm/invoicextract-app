@@ -46,11 +46,11 @@ services:
       - ./keycloak/themes/invoicextract:/opt/keycloak/themes/invoicextract:ro
       - ./invoicextract-realm.json:/tmp/invoicextract-realm.json:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200\\|OK' || exit 1"]
       interval: 15s
       timeout: 10s
-      retries: 20
-      start_period: 90s
+      retries: 30
+      start_period: 120s
     networks:
       - app_network
   mysql:
