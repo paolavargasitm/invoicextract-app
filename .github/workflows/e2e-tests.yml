@@ -280,11 +280,8 @@ jobs:
           API_TIMEOUT=30000
           
           # Keycloak Client Credentials for API Authentication
-          # IMPORTANT: Use host.docker.internal to match backend's KEYCLOAK_AUTH_SERVER_URL
-          # This ensures token issuer matches backend's JWT validation
           CLIENT_ID=invoices-backend
           CLIENT_SECRET=${CLIENT_SECRET}
-          KEYCLOAK_TOKEN_URL=http://host.docker.internal:8085
           
           # Test Credentials by Role
           ADMIN_USERNAME=ana.admin
