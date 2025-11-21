@@ -96,8 +96,9 @@ export class AuthHelper {
     const token = await this.getAccessToken();
     const baseURL = process.env.API_BASE_URL || 'http://localhost:8080/invoicextract';
     
-    // Ensure baseURL ends with trailing slash for proper URL joining
-    const normalizedBaseURL = baseURL.endsWith('/') ? baseURL : `${baseURL}/`;
+    // Do NOT add trailing slash - Playwright's APIRequestContext handles URL joining correctly
+    // when endpoints start with '/' (which they should)
+    const normalizedBaseURL = baseURL.endsWith('/') ? baseURL.slice(0, -1) : baseURL;
 
     return await request.newContext({
       baseURL: normalizedBaseURL,

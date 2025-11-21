@@ -5,10 +5,10 @@ Feature: Email Configuration API
 
   @api
   Scenario: Get active email configurations
-    When I send a GET request to "api/config/email/active"
+    When I send a GET request to "/api/config/email/active"
     Then the response status should be 200
 
   @api
   Scenario: Get email configuration by username (non-existent)
-    When I send a GET request to "api/config/email/nonexistent@company.com"
+    When I send a GET request to "/api/config/email/nonexistent@company.com"
     Then the response status should be 404
