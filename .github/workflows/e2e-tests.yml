@@ -45,12 +45,24 @@ jobs:
             mvn clean package -DskipTests
           cd ..
 
+      - name: Build mapping-service JAR before Docker compose
+        run: |
+          cd invoicextract-mapping-service
+          docker run --rm \
+            -v $PWD:/app \
+            -w /app \
+            maven:3.9.6-eclipse-temurin-17 \
+            mvn clean package -DskipTests
+          cd ..
+
       - name: Build backend Docker image with latest code
         run: |
           if docker compose version &>/dev/null; then
             docker compose build app --no-cache
+            docker compose build mapping-service --no-cache
           else
             docker-compose build app --no-cache
+            docker-compose build mapping-service --no-cache
           fi
 
       - name: Start all services with Docker Compose
