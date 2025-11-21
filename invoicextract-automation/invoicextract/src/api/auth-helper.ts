@@ -37,7 +37,9 @@ export class AuthHelper {
    * @returns Access token string
    */
   private static async requestNewToken(): Promise<string> {
-    const keycloakUrl = process.env.KEYCLOAK_BASE_URL || 'http://localhost:8085';
+    // Use KEYCLOAK_TOKEN_URL if available (for matching backend's issuer in CI/CD)
+    // Otherwise fall back to KEYCLOAK_BASE_URL for local development
+    const keycloakUrl = process.env.KEYCLOAK_TOKEN_URL || process.env.KEYCLOAK_BASE_URL || 'http://localhost:8085';
     const clientId = process.env.CLIENT_ID || 'invoices-backend';
     const clientSecret = process.env.CLIENT_SECRET;
 
