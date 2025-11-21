@@ -45,6 +45,14 @@ jobs:
             mvn clean package -DskipTests
           cd ..
 
+      - name: Build backend Docker image with latest code
+        run: |
+          if docker compose version &>/dev/null; then
+            docker compose build app --no-cache
+          else
+            docker-compose build app --no-cache
+          fi
+
       - name: Start all services with Docker Compose
         run: |
           echo "Starting infrastructure services..."
