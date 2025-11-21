@@ -182,13 +182,14 @@ jobs:
         run: |
           echo "=== Seeding initial ERP test data ==="
           
-          # Wait for mapping-service to be ready
+          # Wait for mapping-service to be ready (try swagger-ui endpoint)
           echo "Waiting for mapping-service to be healthy..."
-          timeout 60 bash -c 'until curl -sf http://localhost:8082/actuator/health > /dev/null 2>&1; do echo "Waiting for mapping-service..."; sleep 3; done' || echo "⚠️ mapping-service health check timed out, continuing anyway"
-          echo "✅ Mapping-service is ready"
+          timeout 90 bash -c 'until curl -sf http://localhost:8082/invoice-mapping/swagger-ui.html > /dev/null 2>&1 || curl -sf http://localhost:8082/invoice-mapping/ > /dev/null 2>&1; do echo "Waiting for mapping-service..."; sleep 5; done' || echo "⚠️ mapping-service health check timed out, continuing anyway"
+          echo "✅ Mapping-service should be ready"
           
-          # Get access token using host.docker.internal to match backend's issuer
-          TOKEN=$(curl -s -X POST "http://host.docker.internal:8085/realms/invoicextract/protocol/openid-connect/token" \
+          # Get access token using localhost (issuer validation is now disabled in backend)
+          echo "Getting access token from Keycloak..."
+          TOKEN=$(curl -s -X POST "http://localhost:8085/realms/invoicextract/protocol/openid-connect/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "client_id=invoices-backend" \
             -d "client_secret=TlPOfnP8P30SdR6bRl3WtJSNqM6ojdhA" \
@@ -196,6 +197,12 @@ jobs:
           
           if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
             echo "❌ Failed to get access token for seeding"
+            echo "Trying to get more details..."
+            curl -v -X POST "http://localhost:8085/realms/invoicextract/protocol/openid-connect/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "client_id=invoices-backend" \
+              -d "client_secret=TlPOfnP8P30SdR6bRl3WtJSNqM6ojdhA" \
+              -d "grant_type=client_credentials"
             exit 1
           fi
           
