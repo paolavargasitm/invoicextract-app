@@ -208,9 +208,9 @@ jobs:
           
           echo "✅ Got access token for seeding"
           
-          # Create initial ERPs via mapping-service API
+          # Create initial ERPs via mapping-service API (context-path: /invoice-mapping)
           echo "Creating SAP ERP..."
-          RESPONSE=$(curl -s -X POST "http://localhost:8082/api/mappings/erps" \
+          RESPONSE=$(curl -s -X POST "http://localhost:8082/invoice-mapping/api/erps" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"name": "SAP", "active": true}' \
@@ -224,7 +224,7 @@ jobs:
           fi
           
           echo "Creating Oracle ERP..."
-          RESPONSE=$(curl -s -X POST "http://localhost:8082/api/mappings/erps" \
+          RESPONSE=$(curl -s -X POST "http://localhost:8082/invoice-mapping/api/erps" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"name": "Oracle ERP", "active": true}' \
@@ -238,7 +238,7 @@ jobs:
           fi
           
           echo "Creating Microsoft Dynamics ERP..."
-          RESPONSE=$(curl -s -X POST "http://localhost:8082/api/mappings/erps" \
+          RESPONSE=$(curl -s -X POST "http://localhost:8082/invoice-mapping/api/erps" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"name": "Microsoft Dynamics", "active": false}' \
