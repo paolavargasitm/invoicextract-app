@@ -178,6 +178,48 @@ jobs:
           curl -I ${{ env.KEYCLOAK_URL }}/realms/invoicextract/.well-known/openid-configuration
           echo "✅ Keycloak is accessible!"
 
+      - name: Seed initial test data
+        run: |
+          echo "=== Seeding initial ERP test data ==="
+          
+          # Get access token using host.docker.internal to match backend's issuer
+          TOKEN=$(curl -s -X POST "http://host.docker.internal:8085/realms/invoicextract/protocol/openid-connect/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "client_id=invoices-backend" \
+            -d "client_secret=TlPOfnP8P30SdR6bRl3WtJSNqM6ojdhA" \
+            -d "grant_type=client_credentials" | jq -r '.access_token')
+          
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+            echo "❌ Failed to get access token for seeding"
+            exit 1
+          fi
+          
+          echo "✅ Got access token for seeding"
+          
+          # Create initial ERPs via mapping-service API
+          echo "Creating SAP ERP..."
+          curl -X POST "http://localhost:8082/api/mappings/erps" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "SAP", "active": true}' \
+            -w "\nStatus: %{http_code}\n" || echo "⚠️ SAP ERP might already exist"
+          
+          echo "Creating Oracle ERP..."
+          curl -X POST "http://localhost:8082/api/mappings/erps" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "Oracle ERP", "active": true}' \
+            -w "\nStatus: %{http_code}\n" || echo "⚠️ Oracle ERP might already exist"
+          
+          echo "Creating Microsoft Dynamics ERP..."
+          curl -X POST "http://localhost:8082/api/mappings/erps" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "Microsoft Dynamics", "active": false}' \
+            -w "\nStatus: %{http_code}\n" || echo "⚠️ Microsoft Dynamics ERP might already exist"
+          
+          echo "✅ Test data seeding completed"
+
       - name: Install dependencies and Playwright browsers
         working-directory: ./invoicextract-automation/invoicextract
         run: |
