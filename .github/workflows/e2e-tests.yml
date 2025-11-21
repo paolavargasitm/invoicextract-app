@@ -182,6 +182,11 @@ jobs:
         run: |
           echo "=== Seeding initial ERP test data ==="
           
+          # Wait for mapping-service to be ready
+          echo "Waiting for mapping-service to be healthy..."
+          timeout 60 bash -c 'until curl -sf http://localhost:8082/actuator/health > /dev/null 2>&1; do echo "Waiting for mapping-service..."; sleep 3; done' || echo "⚠️ mapping-service health check timed out, continuing anyway"
+          echo "✅ Mapping-service is ready"
+          
           # Get access token using host.docker.internal to match backend's issuer
           TOKEN=$(curl -s -X POST "http://host.docker.internal:8085/realms/invoicextract/protocol/openid-connect/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
@@ -198,25 +203,46 @@ jobs:
           
           # Create initial ERPs via mapping-service API
           echo "Creating SAP ERP..."
-          curl -X POST "http://localhost:8082/api/mappings/erps" \
+          RESPONSE=$(curl -s -X POST "http://localhost:8082/api/mappings/erps" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"name": "SAP", "active": true}' \
-            -w "\nStatus: %{http_code}\n" || echo "⚠️ SAP ERP might already exist"
+            -w "\n%{http_code}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          echo "Response: $RESPONSE"
+          if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "409" ]; then
+            echo "✅ SAP ERP created or already exists"
+          else
+            echo "⚠️ Unexpected status code: $HTTP_CODE"
+          fi
           
           echo "Creating Oracle ERP..."
-          curl -X POST "http://localhost:8082/api/mappings/erps" \
+          RESPONSE=$(curl -s -X POST "http://localhost:8082/api/mappings/erps" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"name": "Oracle ERP", "active": true}' \
-            -w "\nStatus: %{http_code}\n" || echo "⚠️ Oracle ERP might already exist"
+            -w "\n%{http_code}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          echo "Response: $RESPONSE"
+          if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "409" ]; then
+            echo "✅ Oracle ERP created or already exists"
+          else
+            echo "⚠️ Unexpected status code: $HTTP_CODE"
+          fi
           
           echo "Creating Microsoft Dynamics ERP..."
-          curl -X POST "http://localhost:8082/api/mappings/erps" \
+          RESPONSE=$(curl -s -X POST "http://localhost:8082/api/mappings/erps" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"name": "Microsoft Dynamics", "active": false}' \
-            -w "\nStatus: %{http_code}\n" || echo "⚠️ Microsoft Dynamics ERP might already exist"
+            -w "\n%{http_code}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          echo "Response: $RESPONSE"
+          if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "409" ]; then
+            echo "✅ Microsoft Dynamics ERP created or already exists"
+          else
+            echo "⚠️ Unexpected status code: $HTTP_CODE"
+          fi
           
           echo "✅ Test data seeding completed"
 
