@@ -48,6 +48,7 @@ public class SecurityConfig {
 
                 // Business routes
                 .requestMatchers("/api/configs/**").hasRole("ADMIN")
+                .requestMatchers("/api/config/email/**").hasAnyRole("FINANZAS", "ADMIN")
                 .requestMatchers("/api/invoices/**").hasAnyRole("FINANZAS", "ADMIN")
 
                 // Everything else requires auth

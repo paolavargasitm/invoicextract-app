@@ -179,7 +179,13 @@ jobs:
       - name: Create .env file for tests
         working-directory: ./invoicextract-automation/invoicextract
         run: |
-          cat > .env << 'EOF'
+          # Use secret if available, otherwise use default from realm
+          CLIENT_SECRET="${{ secrets.KEYCLOAK_CLIENT_SECRET }}"
+          if [ -z "$CLIENT_SECRET" ]; then
+            CLIENT_SECRET="TlPOfnP8P30SdR6bRl3WtJSNqM6ojdhA"
+          fi
+          
+          cat > .env << EOF
           # Base URLs
           BASE_URL=http://localhost:3001
           FRONTEND_URL=http://localhost:3001
@@ -199,7 +205,7 @@ jobs:
           
           # Keycloak Client Credentials for API Authentication
           CLIENT_ID=invoices-backend
-          CLIENT_SECRET=TlPOfnP8P30SdR6bRl3WtJSNqM6ojdhA
+          CLIENT_SECRET=${CLIENT_SECRET}
           
           # Test Credentials by Role
           ADMIN_USERNAME=ana.admin
@@ -213,7 +219,8 @@ jobs:
           EOF
           
           echo "✅ .env file created with test configuration"
-          cat .env
+          echo "CLIENT_ID: invoices-backend"
+          echo "CLIENT_SECRET: [HIDDEN]"
 
       - name: Run Cucumber tests
         working-directory: ./invoicextract-automation/invoicextract
